@@ -59,12 +59,12 @@ public final class StringUtils {
 
     private static final ErrorTypeAwareLogger logger = LoggerFactory.getErrorTypeAwareLogger(StringUtils.class);
     private static final Pattern KVP_PATTERN =
-            Pattern.compile("([_.a-zA-Z0-9][-_.a-zA-Z0-9]*)[=](.*)"); // key value pair pattern.
+        Pattern.compile("([_.a-zA-Z0-9][-_.a-zA-Z0-9]*)[=](.*)"); // key value pair pattern.
     private static final Pattern NUM_PATTERN = Pattern.compile("^\\d+$");
     private static final Pattern PARAMETERS_PATTERN =
-            Pattern.compile("^\\[((\\s*\\{\\s*[\\w_\\-\\.]+\\s*:\\s*.+?\\s*\\}\\s*,?\\s*)+)\\s*\\]$");
+        Pattern.compile("^\\[((\\s*\\{\\s*[\\w_\\-\\.]+\\s*:\\s*.+?\\s*\\}\\s*,?\\s*)+)\\s*\\]$");
     private static final Pattern PAIR_PARAMETERS_PATTERN =
-            Pattern.compile("^\\{\\s*([\\w-_\\.]+)\\s*:\\s*(.+)\\s*\\}$");
+        Pattern.compile("^\\{\\s*([\\w-_\\.]+)\\s*:\\s*(.+)\\s*\\}$");
     private static final int PAD_LIMIT = 8192;
     private static final byte[] HEX2B;
 
@@ -122,7 +122,8 @@ public final class StringUtils {
         HEX2B['f'] = (byte) 15;
     }
 
-    private StringUtils() {}
+    private StringUtils() {
+    }
 
     /**
      * Gets a CharSequence length or {@code 0} if the CharSequence is
@@ -1074,7 +1075,7 @@ public final class StringUtils {
         if (str == null) {
             return new String[0];
         } else if (delimiter == null) {
-            return new String[] {str};
+            return new String[]{str};
         } else {
             List<String> result = new ArrayList();
             int pos;
@@ -1219,7 +1220,7 @@ public final class StringUtils {
         int lo = decodeHexNibble(s.charAt(pos + 1));
         if (hi == -1 || lo == -1) {
             throw new IllegalArgumentException(
-                    String.format("invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
+                String.format("invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
         }
         return (byte) ((hi << 4) + lo);
     }

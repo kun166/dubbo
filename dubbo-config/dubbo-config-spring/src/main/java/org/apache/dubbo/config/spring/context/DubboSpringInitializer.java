@@ -16,8 +16,10 @@
  */
 package org.apache.dubbo.config.spring.context;
 
+import org.apache.dubbo.common.extension.ExtensionDirector;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.config.spring.schema.DubboNamespaceHandler;
 import org.apache.dubbo.config.spring.util.DubboBeanUtils;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.FrameworkModel;
@@ -44,14 +46,33 @@ public class DubboSpringInitializer {
 
     private static final Map<BeanDefinitionRegistry, DubboSpringInitContext> contextMap = new ConcurrentHashMap<>();
 
-    private DubboSpringInitializer() {}
+    private DubboSpringInitializer() {
+    }
 
+    /**
+     * {@link DubboNamespaceHandler#parse(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext)}
+     * 中调用
+     *
+     * @param registry
+     */
     public static void initialize(BeanDefinitionRegistry registry) {
 
         // prepare context and do customize
+        // dubbo spring init 上下文?
         DubboSpringInitContext context = new DubboSpringInitContext();
 
         // Spring ApplicationContext may not ready at this moment (e.g. load from xml), so use registry as key
+        /**
+         *{@link Map#putIfAbsent(java.lang.Object, java.lang.Object)}
+         *比如我们设置key为字符串"key",value为1,2,3
+         * 则第一次putIfAbsent("key",1),返回null
+         * 第一次putIfAbsent("key",2),返回1
+         * 第一次putIfAbsent("key",3),返回1
+         * get("key"),返回1
+         * 即:
+         * 仅有第一次设置成功,且返回null
+         * 后面均设置不成功,且返回第一次设置的值
+         */
         if (contextMap.putIfAbsent(registry, context) != null) {
             return;
         }
@@ -72,11 +93,11 @@ public class DubboSpringInitializer {
         for (Map.Entry<BeanDefinitionRegistry, DubboSpringInitContext> entry : contextMap.entrySet()) {
             DubboSpringInitContext initContext = entry.getValue();
             if (initContext.getApplicationContext() == springContext
-                    || initContext.getBeanFactory() == autowireCapableBeanFactory
-                    || initContext.getRegistry() == autowireCapableBeanFactory) {
+                || initContext.getBeanFactory() == autowireCapableBeanFactory
+                || initContext.getRegistry() == autowireCapableBeanFactory) {
                 DubboSpringInitContext context = contextMap.remove(entry.getKey());
                 logger.info("Unbind " + safeGetModelDesc(context.getModuleModel()) + " from spring container: "
-                        + ObjectUtils.identityToString(entry.getKey()));
+                    + ObjectUtils.identityToString(entry.getKey()));
                 return true;
             }
         }
@@ -96,10 +117,16 @@ public class DubboSpringInitializer {
         return null;
     }
 
-    private static void initContext(
-            DubboSpringInitContext context,
-            BeanDefinitionRegistry registry,
-            ConfigurableListableBeanFactory beanFactory) {
+    /**
+     * {@link DubboSpringInitializer#initialize(org.springframework.beans.factory.support.BeanDefinitionRegistry)}
+     * 中调用
+     *
+     * @param context
+     * @param registry
+     * @param beanFactory
+     */
+    private static void initContext(DubboSpringInitContext context, BeanDefinitionRegistry registry, ConfigurableListableBeanFactory beanFactory) {
+        // 先把两者设置进去
         context.setRegistry(registry);
         context.setBeanFactory(beanFactory);
 
@@ -128,7 +155,7 @@ public class DubboSpringInitializer {
             logger.info("Use module model from customizer: " + moduleModel.getDesc());
         }
         logger.info(
-                "Bind " + moduleModel.getDesc() + " to spring container: " + ObjectUtils.identityToString(registry));
+            "Bind " + moduleModel.getDesc() + " to spring container: " + ObjectUtils.identityToString(registry));
 
         // set module attributes
         Map<String, Object> moduleAttributes = context.getModuleAttributes();
@@ -160,13 +187,13 @@ public class DubboSpringInitializer {
             beanFactory = genericApplicationContext.getBeanFactory();
         } else {
             throw new IllegalStateException("Can not find Spring BeanFactory from registry: "
-                    + registry.getClass().getName());
+                + registry.getClass().getName());
         }
         return beanFactory;
     }
 
     private static void registerContextBeans(
-            ConfigurableListableBeanFactory beanFactory, DubboSpringInitContext context) {
+        ConfigurableListableBeanFactory beanFactory, DubboSpringInitContext context) {
         // register singleton
         registerSingleton(beanFactory, context);
         registerSingleton(beanFactory, context.getApplicationModel());
@@ -186,12 +213,21 @@ public class DubboSpringInitializer {
         return null;
     }
 
+    /**
+     * {@link DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
+     * 中调用
+     *
+     * @param context
+     */
     private static void customize(DubboSpringInitContext context) {
 
         // find initialization customizers
         Set<DubboSpringInitCustomizer> customizers = FrameworkModel.defaultModel()
-                .getExtensionLoader(DubboSpringInitCustomizer.class)
-                .getSupportedExtensionInstances();
+            /**
+             * 调用的是{@link ExtensionDirector#getExtensionLoader(java.lang.Class)}
+             */
+            .getExtensionLoader(DubboSpringInitCustomizer.class)
+            .getSupportedExtensionInstances();
         for (DubboSpringInitCustomizer customizer : customizers) {
             customizer.customize(context);
         }

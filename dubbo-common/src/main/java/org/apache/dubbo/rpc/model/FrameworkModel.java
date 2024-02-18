@@ -53,6 +53,10 @@ public class FrameworkModel extends ScopeModel {
 
     private static volatile FrameworkModel defaultInstance;
 
+    /**
+     * {@link FrameworkModel#FrameworkModel()}中调用
+     * 一旦创建过{@link FrameworkModel},即加入到这里面
+     */
     private static final List<FrameworkModel> allInstances = new CopyOnWriteArrayList<>();
 
     // ========================= Static Fields End ===================================
@@ -74,11 +78,16 @@ public class FrameworkModel extends ScopeModel {
 
     /**
      * Use {@link FrameworkModel#newModel()} to create a new model
+     * <p>
+     * {@link FrameworkModel#defaultModel()}中创建
+     * </p>
      */
     public FrameworkModel() {
+        // 初始化父类默认参数
         super(null, ExtensionScope.FRAMEWORK, false);
         synchronized (globalLock) {
             synchronized (instLock) {
+
                 this.setInternalId(String.valueOf(index.getAndIncrement()));
                 // register FrameworkModel instance early
                 allInstances.add(this);
@@ -92,7 +101,7 @@ public class FrameworkModel extends ScopeModel {
                 serviceRepository = new FrameworkServiceRepository(this);
 
                 ExtensionLoader<ScopeModelInitializer> initializerExtensionLoader =
-                        this.getExtensionLoader(ScopeModelInitializer.class);
+                    this.getExtensionLoader(ScopeModelInitializer.class);
                 Set<ScopeModelInitializer> initializers = initializerExtensionLoader.getSupportedExtensionInstances();
                 for (ScopeModelInitializer initializer : initializers) {
                     initializer.initializeFrameworkModel(this);
@@ -100,9 +109,9 @@ public class FrameworkModel extends ScopeModel {
 
                 internalApplicationModel = new ApplicationModel(this, true);
                 internalApplicationModel
-                        .getApplicationConfigManager()
-                        .setApplication(new ApplicationConfig(
-                                internalApplicationModel, CommonConstants.DUBBO_INTERNAL_APPLICATION));
+                    .getApplicationConfigManager()
+                    .setApplication(new ApplicationConfig(
+                        internalApplicationModel, CommonConstants.DUBBO_INTERNAL_APPLICATION));
                 internalApplicationModel.setModelName(CommonConstants.DUBBO_INTERNAL_APPLICATION);
             }
         }
@@ -154,10 +163,10 @@ public class FrameworkModel extends ScopeModel {
         synchronized (instLock) {
             if (applicationModels.size() > 0) {
                 List<String> remainApplications =
-                        applicationModels.stream().map(ScopeModel::getDesc).collect(Collectors.toList());
+                    applicationModels.stream().map(ScopeModel::getDesc).collect(Collectors.toList());
                 throw new IllegalStateException(
-                        "Not all application models are completely destroyed, remaining " + remainApplications.size()
-                                + " application models may be created during destruction: " + remainApplications);
+                    "Not all application models are completely destroyed, remaining " + remainApplications.size()
+                        + " application models may be created during destruction: " + remainApplications);
             }
         }
     }
@@ -174,14 +183,21 @@ public class FrameworkModel extends ScopeModel {
      * During destroying the default FrameworkModel, the FrameworkModel.defaultModel() or ApplicationModel.defaultModel()
      * will return a broken model, maybe cause unpredictable problem.
      * Recommendation: Avoid using the default model as much as possible.
+     * <p>
+     * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#customize}
+     * 中调用
+     * </p>
+     *
      * @return the global default FrameworkModel
      */
     public static FrameworkModel defaultModel() {
+        // 单例模式
         FrameworkModel instance = defaultInstance;
         if (instance == null) {
             synchronized (globalLock) {
                 resetDefaultFrameworkModel();
                 if (defaultInstance == null) {
+                    // 如果为null，则创建一个新的
                     defaultInstance = new FrameworkModel();
                 }
                 instance = defaultInstance;
@@ -193,6 +209,7 @@ public class FrameworkModel extends ScopeModel {
 
     /**
      * Get all framework model instances
+     *
      * @return
      */
     public static List<FrameworkModel> getAllInstances() {
@@ -220,6 +237,7 @@ public class FrameworkModel extends ScopeModel {
 
     /**
      * Get or create default application model
+     *
      * @return
      */
     public ApplicationModel defaultApplication() {
@@ -271,7 +289,7 @@ public class FrameworkModel extends ScopeModel {
 
     /**
      * Protocols are special resources that need to be destroyed as soon as possible.
-     *
+     * <p>
      * Since connections inside protocol are not classified by applications, trying to destroy protocols in advance might only work for singleton application scenario.
      */
     void tryDestroyProtocols() {
@@ -310,27 +328,38 @@ public class FrameworkModel extends ScopeModel {
             if (defaultInstance == this && oldDefaultAppModel != this.defaultAppModel) {
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Reset global default application from " + safeGetModelDesc(oldDefaultAppModel) + " to "
-                            + safeGetModelDesc(this.defaultAppModel));
+                        + safeGetModelDesc(this.defaultAppModel));
                 }
             }
         }
     }
 
+    /**
+     * 重置{@link FrameworkModel#defaultInstance}
+     * 如果{@link FrameworkModel#allInstances}有数据,则把{@link FrameworkModel#defaultInstance}设置为{@link FrameworkModel#allInstances}第一个
+     * <p>
+     * {@link FrameworkModel#defaultModel()}中调用
+     * </p>
+     */
     private static void resetDefaultFrameworkModel() {
         synchronized (globalLock) {
+            // 如果不为空且未销毁，则直接返回了
             if (defaultInstance != null && !defaultInstance.isDestroyed()) {
                 return;
             }
+            // 先记录原来的defaultInstance
             FrameworkModel oldDefaultFrameworkModel = defaultInstance;
+            // 给defaultInstance赋值
             if (allInstances.size() > 0) {
                 defaultInstance = allInstances.get(0);
             } else {
                 defaultInstance = null;
             }
             if (oldDefaultFrameworkModel != defaultInstance) {
+                // 如果两者不相同，则打一个日志
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Reset global default framework from " + safeGetModelDesc(oldDefaultFrameworkModel)
-                            + " to " + safeGetModelDesc(defaultInstance));
+                        + " to " + safeGetModelDesc(defaultInstance));
                 }
             }
         }
@@ -379,7 +408,7 @@ public class FrameworkModel extends ScopeModel {
     @Override
     protected boolean checkIfClassLoaderCanRemoved(ClassLoader classLoader) {
         return super.checkIfClassLoaderCanRemoved(classLoader)
-                && applicationModels.stream()
-                        .noneMatch(applicationModel -> applicationModel.containsClassLoader(classLoader));
+            && applicationModels.stream()
+            .noneMatch(applicationModel -> applicationModel.containsClassLoader(classLoader));
     }
 }

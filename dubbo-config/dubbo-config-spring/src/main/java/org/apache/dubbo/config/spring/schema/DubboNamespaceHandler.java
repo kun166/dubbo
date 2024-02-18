@@ -42,6 +42,8 @@ import org.w3c.dom.Element;
 
 /**
  * DubboNamespaceHandler
+ * <p>
+ * dubbo spring标签实现类
  *
  * @export
  */

@@ -20,6 +20,7 @@ import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.annotation.Service;
 import org.apache.dubbo.config.spring.context.event.ServiceBeanExportedEvent;
+import org.apache.dubbo.config.spring.schema.DubboBeanDefinitionParser;
 import org.apache.dubbo.config.spring.util.DubboBeanUtils;
 import org.apache.dubbo.config.support.Parameter;
 import org.apache.dubbo.rpc.model.ModuleModel;
@@ -28,6 +29,7 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
@@ -39,11 +41,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
  * @export
  */
 public class ServiceBean<T> extends ServiceConfig<T>
-        implements InitializingBean,
-                DisposableBean,
-                ApplicationContextAware,
-                BeanNameAware,
-                ApplicationEventPublisherAware {
+    implements InitializingBean, DisposableBean, ApplicationContextAware, BeanNameAware, ApplicationEventPublisherAware {
 
     private static final long serialVersionUID = 213195494150089726L;
 
@@ -62,6 +60,14 @@ public class ServiceBean<T> extends ServiceConfig<T>
         this.setScopeModel(DubboBeanUtils.getModuleModel(applicationContext));
     }
 
+    /**
+     * {@link DubboBeanDefinitionParser#parse(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext, java.lang.Class, boolean)}
+     * 中设置了{@link ServiceBean}的{@link AbstractBeanDefinition#setAutowireMode(int)}为{@link AbstractBeanDefinition#AUTOWIRE_CONSTRUCTOR}
+     * 关于{@link AbstractBeanDefinition#autowireMode}可以参考：https://blog.csdn.net/ystyaoshengting/article/details/120488094
+     *
+     * @param applicationContext
+     * @param moduleModel
+     */
     public ServiceBean(ApplicationContext applicationContext, ModuleModel moduleModel) {
         super(moduleModel);
         this.service = null;

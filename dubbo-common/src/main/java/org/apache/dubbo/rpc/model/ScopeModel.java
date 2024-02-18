@@ -65,9 +65,18 @@ public abstract class ScopeModel implements ExtensionAccessor {
 
     private final Set<ClassLoader> classLoaders = new ConcurrentHashSet<>();
 
+    /**
+     * {@link FrameworkModel#FrameworkModel()}中赋值为null
+     */
     private final ScopeModel parent;
+    /**
+     * {@link FrameworkModel#FrameworkModel()}中赋值为{@link ExtensionScope#FRAMEWORK}
+     */
     private final ExtensionScope scope;
 
+    /**
+     * {@link ScopeModel#initialize()}中赋值
+     */
     private volatile ExtensionDirector extensionDirector;
 
     private volatile ScopeBeanFactory beanFactory;
@@ -77,10 +86,20 @@ public abstract class ScopeModel implements ExtensionAccessor {
 
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     private final AtomicBoolean destroyed = new AtomicBoolean(false);
+    /**
+     * {@link FrameworkModel#FrameworkModel()}中赋值为false
+     */
     private final boolean internalScope;
 
     protected final Object instLock = new Object();
 
+    /**
+     * {@link FrameworkModel#FrameworkModel()}中调用
+     *
+     * @param parent     null
+     * @param scope      {@link ExtensionScope#FRAMEWORK}
+     * @param isInternal 传的是false
+     */
     protected ScopeModel(ScopeModel parent, ExtensionScope scope, boolean isInternal) {
         this.parent = parent;
         this.scope = scope;
@@ -95,11 +114,14 @@ public abstract class ScopeModel implements ExtensionAccessor {
      * In subclass, the extensionDirector and beanFactory are available in initialize but not available in constructor.
      * </li>
      * </ol>
+     * <p>
+     * {@link FrameworkModel#FrameworkModel()}中调用
+     * </p>
      */
     protected void initialize() {
         synchronized (instLock) {
             this.extensionDirector =
-                    new ExtensionDirector(parent != null ? parent.getExtensionDirector() : null, scope, this);
+                new ExtensionDirector(parent != null ? parent.getExtensionDirector() : null, scope, this);
             this.extensionDirector.addExtensionPostProcessor(new ScopeModelAwareExtensionProcessor(this));
             this.beanFactory = new ScopeBeanFactory(parent != null ? parent.getBeanFactory() : null, extensionDirector);
 
@@ -248,6 +270,7 @@ public abstract class ScopeModel implements ExtensionAccessor {
      * Get current model's environment.
      * </br>
      * Note: This method should not start with `get` or it would be invoked due to Spring boot refresh.
+     *
      * @see <a href="https://github.com/apache/dubbo/issues/12542">Configuration refresh issue</a>
      */
     public abstract Environment modelEnvironment();
@@ -271,6 +294,11 @@ public abstract class ScopeModel implements ExtensionAccessor {
         return this.internalId;
     }
 
+    /**
+     * {@link FrameworkModel#FrameworkModel()}中调用,设置id
+     *
+     * @param internalId
+     */
     void setInternalId(String internalId) {
         this.internalId = internalId;
     }

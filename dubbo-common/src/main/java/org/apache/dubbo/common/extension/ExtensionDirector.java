@@ -34,6 +34,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ExtensionDirector implements ExtensionAccessor {
 
     private final ConcurrentMap<Class<?>, ExtensionLoader<?>> extensionLoadersMap = new ConcurrentHashMap<>(64);
+    /**
+     * 存放key上的{@link SPI}
+     */
     private final ConcurrentMap<Class<?>, ExtensionScope> extensionScopeMap = new ConcurrentHashMap<>(64);
     private final ExtensionDirector parent;
     private final ExtensionScope scope;
@@ -62,6 +65,14 @@ public class ExtensionDirector implements ExtensionAccessor {
         return this;
     }
 
+    /**
+     * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#customize}
+     * 中调用
+     *
+     * @param type
+     * @param <T>
+     * @return
+     */
     @Override
     @SuppressWarnings("unchecked")
     public <T> ExtensionLoader<T> getExtensionLoader(Class<T> type) {
@@ -74,7 +85,7 @@ public class ExtensionDirector implements ExtensionAccessor {
         }
         if (!withExtensionAnnotation(type)) {
             throw new IllegalArgumentException("Extension type (" + type
-                    + ") is not an extension, because it is NOT annotated with @" + SPI.class.getSimpleName() + "!");
+                + ") is not an extension, because it is NOT annotated with @" + SPI.class.getSimpleName() + "!");
         }
 
         // 1. find in local cache
@@ -82,6 +93,7 @@ public class ExtensionDirector implements ExtensionAccessor {
 
         ExtensionScope scope = extensionScopeMap.get(type);
         if (scope == null) {
+            // 获取type的SPI
             SPI annotation = type.getAnnotation(SPI.class);
             scope = annotation.scope();
             extensionScopeMap.put(type, scope);
@@ -116,6 +128,17 @@ public class ExtensionDirector implements ExtensionAccessor {
         return loader;
     }
 
+    /**
+     * type的{@link SPI}注解,{@link SPI#scope()}为{@link ExtensionScope#SELF}的,通过此方法创建
+     * <p>
+     * {@link ExtensionDirector#getExtensionLoader(java.lang.Class)}
+     * 中调用
+     * </p>
+     *
+     * @param type
+     * @param <T>
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private <T> ExtensionLoader<T> createExtensionLoader0(Class<T> type) {
         checkDestroyed();
@@ -130,6 +153,15 @@ public class ExtensionDirector implements ExtensionAccessor {
         return defaultAnnotation.scope().equals(scope);
     }
 
+    /**
+     * 判断传入的type是否有{@link SPI}注解
+     * <p>
+     * {@link ExtensionDirector#getExtensionLoader(java.lang.Class)}中调用
+     * </p>
+     *
+     * @param type
+     * @return
+     */
     private static boolean withExtensionAnnotation(Class<?> type) {
         return type.isAnnotationPresent(SPI.class);
     }
@@ -138,7 +170,8 @@ public class ExtensionDirector implements ExtensionAccessor {
         return parent;
     }
 
-    public void removeAllCachedLoader() {}
+    public void removeAllCachedLoader() {
+    }
 
     public void destroy() {
         if (destroyed.compareAndSet(false, true)) {

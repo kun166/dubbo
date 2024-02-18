@@ -24,7 +24,7 @@ public class RestProvider {
         ClassPathXmlApplicationContext context =
                 new ClassPathXmlApplicationContext(new String[] {"spring/rest-provider.xml"});
 
-        context.refresh();
+        // context.refresh();
 
         //        SpringControllerService springControllerService = context.getBean(SpringControllerService.class);
         //        ServiceConfig<SpringControllerService> serviceConfig = new ServiceConfig<>();
