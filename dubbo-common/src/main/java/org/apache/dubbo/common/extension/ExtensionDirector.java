@@ -17,6 +17,7 @@
 package org.apache.dubbo.common.extension;
 
 import org.apache.dubbo.rpc.model.ScopeModel;
+import org.apache.dubbo.rpc.model.ScopeModelAwareExtensionProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,16 +41,33 @@ public class ExtensionDirector implements ExtensionAccessor {
     private final ConcurrentMap<Class<?>, ExtensionScope> extensionScopeMap = new ConcurrentHashMap<>(64);
     private final ExtensionDirector parent;
     private final ExtensionScope scope;
+
+    /**
+     * 在{@link ScopeModel#initialize()}中添加
+     * {@link ScopeModelAwareExtensionProcessor}
+     */
     private final List<ExtensionPostProcessor> extensionPostProcessors = new ArrayList<>();
     private final ScopeModel scopeModel;
     private final AtomicBoolean destroyed = new AtomicBoolean();
 
+    /**
+     * {@link ScopeModel#initialize()}中调用
+     *
+     * @param parent
+     * @param scope
+     * @param scopeModel
+     */
     public ExtensionDirector(ExtensionDirector parent, ExtensionScope scope, ScopeModel scopeModel) {
         this.parent = parent;
         this.scope = scope;
         this.scopeModel = scopeModel;
     }
 
+    /**
+     * {@link ScopeModel#initialize()}中调用
+     *
+     * @param processor
+     */
     public void addExtensionPostProcessor(ExtensionPostProcessor processor) {
         if (!this.extensionPostProcessors.contains(processor)) {
             this.extensionPostProcessors.add(processor);

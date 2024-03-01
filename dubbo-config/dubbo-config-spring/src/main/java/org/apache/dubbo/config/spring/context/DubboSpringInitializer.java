@@ -74,6 +74,7 @@ public class DubboSpringInitializer {
          * 后面均设置不成功,且返回第一次设置的值
          */
         if (contextMap.putIfAbsent(registry, context) != null) {
+            // 代码只执行一次，如果已经执行过，直接返回
             return;
         }
 
@@ -121,9 +122,9 @@ public class DubboSpringInitializer {
      * {@link DubboSpringInitializer#initialize(org.springframework.beans.factory.support.BeanDefinitionRegistry)}
      * 中调用
      *
-     * @param context
-     * @param registry
-     * @param beanFactory
+     * @param context     dubbo spring 初始化上下文
+     * @param registry    大概率是个{@link org.springframework.beans.factory.support.DefaultListableBeanFactory}
+     * @param beanFactory 同registry
      */
     private static void initContext(DubboSpringInitContext context, BeanDefinitionRegistry registry, ConfigurableListableBeanFactory beanFactory) {
         // 先把两者设置进去

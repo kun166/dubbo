@@ -106,14 +106,26 @@ public class ServiceBean<T> extends ServiceConfig<T>
         return service;
     }
 
+    /**
+     * bean初始化的时候会调用
+     *
+     * @throws Exception
+     */
     @Override
     public void afterPropertiesSet() throws Exception {
         if (StringUtils.isEmpty(getPath())) {
             if (StringUtils.isNotEmpty(getInterface())) {
+                /**
+                 * 如果没有设置path,且已经设置了interfaceName,
+                 * 则设置path为interfaceName
+                 */
                 setPath(getInterface());
             }
         }
         // register service bean
+        /**
+         * 下面代码感觉很重要，需要看一下
+         */
         ModuleModel moduleModel = DubboBeanUtils.getModuleModel(applicationContext);
         moduleModel.getConfigManager().addService(this);
         moduleModel.getDeployer().setPending();

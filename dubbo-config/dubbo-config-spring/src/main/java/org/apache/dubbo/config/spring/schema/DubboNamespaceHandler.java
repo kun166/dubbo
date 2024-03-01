@@ -69,6 +69,10 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
 
     /**
      * Override {@link NamespaceHandlerSupport#parse(Element, ParserContext)} method
+     * <p>
+     * 继承自{@link NamespaceHandlerSupport}的方法。
+     * 并对该方法进行了功能拓展。
+     * </p>
      *
      * @param element       {@link Element}
      * @param parserContext {@link ParserContext}
@@ -78,9 +82,11 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
     @Override
     public BeanDefinition parse(Element element, ParserContext parserContext) {
         BeanDefinitionRegistry registry = parserContext.getRegistry();
+        // 启用spring 注解功能
         registerAnnotationConfigProcessors(registry);
 
         // initialize dubbo beans
+        // 这个方法非常非常重要
         DubboSpringInitializer.initialize(parserContext.getRegistry());
 
         BeanDefinition beanDefinition = super.parse(element, parserContext);
@@ -90,6 +96,11 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
 
     /**
      * Register the processors for the Spring Annotation-Driven features
+     * 开启 spring 的注解功能
+     * <p>
+     * {@link DubboNamespaceHandler#parse(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext)}
+     * 中调用
+     * </p>
      *
      * @param registry {@link BeanDefinitionRegistry}
      * @see AnnotationConfigUtils
