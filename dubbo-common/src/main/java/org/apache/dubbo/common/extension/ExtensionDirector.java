@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.common.extension;
 
+import org.apache.dubbo.rpc.model.FrameworkModel;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelAwareExtensionProcessor;
 
@@ -47,6 +48,10 @@ public class ExtensionDirector implements ExtensionAccessor {
      * {@link ScopeModelAwareExtensionProcessor}
      */
     private final List<ExtensionPostProcessor> extensionPostProcessors = new ArrayList<>();
+    /**
+     * 在{@link ScopeModel#initialize()}中传递了
+     * {@link FrameworkModel}
+     */
     private final ScopeModel scopeModel;
     private final AtomicBoolean destroyed = new AtomicBoolean();
 
@@ -54,7 +59,7 @@ public class ExtensionDirector implements ExtensionAccessor {
      * {@link ScopeModel#initialize()}中调用
      *
      * @param parent
-     * @param scope
+     * @param scope      传递的是{@link ExtensionScope#FRAMEWORK}
      * @param scopeModel
      */
     public ExtensionDirector(ExtensionDirector parent, ExtensionScope scope, ScopeModel scopeModel) {
@@ -86,6 +91,8 @@ public class ExtensionDirector implements ExtensionAccessor {
     /**
      * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#customize}
      * 中调用
+     * <p>
+     * 这个方法很重要
      *
      * @param type
      * @param <T>
@@ -96,19 +103,28 @@ public class ExtensionDirector implements ExtensionAccessor {
     public <T> ExtensionLoader<T> getExtensionLoader(Class<T> type) {
         checkDestroyed();
         if (type == null) {
+            // 传递的参数不能为空
             throw new IllegalArgumentException("Extension type == null");
         }
         if (!type.isInterface()) {
+            // 参数必须为接口
             throw new IllegalArgumentException("Extension type (" + type + ") is not an interface!");
         }
         if (!withExtensionAnnotation(type)) {
+            /**
+             * 接口的注解必须有{@link SPI}
+             */
             throw new IllegalArgumentException("Extension type (" + type
                 + ") is not an extension, because it is NOT annotated with @" + SPI.class.getSimpleName() + "!");
         }
 
         // 1. find in local cache
+        // 先从缓存中找
         ExtensionLoader<T> loader = (ExtensionLoader<T>) extensionLoadersMap.get(type);
-
+        /**
+         * 先根据传入的参数type，去缓存中查找对应的{@link ExtensionScope}
+         * 如果缓存中找不到，则从注解里面获取，然后放到缓存中
+         */
         ExtensionScope scope = extensionScopeMap.get(type);
         if (scope == null) {
             // 获取type的SPI
@@ -119,6 +135,9 @@ public class ExtensionDirector implements ExtensionAccessor {
 
         if (loader == null && scope == ExtensionScope.SELF) {
             // create an instance in self scope
+            /**
+             * 如果scope是{@link ExtensionScope#SELF},则通过下面的方式创建
+             */
             loader = createExtensionLoader0(type);
         }
 
@@ -137,6 +156,16 @@ public class ExtensionDirector implements ExtensionAccessor {
         return loader;
     }
 
+    /**
+     * {@link ExtensionDirector#getExtensionLoader(java.lang.Class)}中调用
+     * <p>
+     * type的注解{@link SPI#scope()}返回的不是{@link ExtensionScope#SELF}
+     * </p>
+     *
+     * @param type
+     * @param <T>
+     * @return
+     */
     private <T> ExtensionLoader<T> createExtensionLoader(Class<T> type) {
         ExtensionLoader<T> loader = null;
         if (isScopeMatched(type)) {
@@ -148,6 +177,7 @@ public class ExtensionDirector implements ExtensionAccessor {
 
     /**
      * type的{@link SPI}注解,{@link SPI#scope()}为{@link ExtensionScope#SELF}的,通过此方法创建
+     * type的{@link SPI}注解,{@link SPI#scope()}，和本实例的{@link ExtensionDirector#scopeModel}相同，也通过此方法创建
      * <p>
      * {@link ExtensionDirector#getExtensionLoader(java.lang.Class)}
      * 中调用
@@ -166,6 +196,12 @@ public class ExtensionDirector implements ExtensionAccessor {
         return loader;
     }
 
+    /**
+     * {@link ExtensionDirector#createExtensionLoader(java.lang.Class)}中调用
+     *
+     * @param type
+     * @return
+     */
     private boolean isScopeMatched(Class<?> type) {
         final SPI defaultAnnotation = type.getAnnotation(SPI.class);
         return defaultAnnotation.scope().equals(scope);

@@ -85,7 +85,7 @@ public @interface Activate {
 
     /**
      * Absolute ordering info, optional
-     *
+     * <p>
      * Ascending order, smaller values will be in the front o the list.
      *
      * @return absolute ordering info
@@ -94,7 +94,9 @@ public @interface Activate {
 
     /**
      * Activate loadClass when the current extension when the specified className all match
-     * @return className names to all match
+     * 当指定的className全部匹配时激活当前扩展名的loadClass
+     *
+     * @return className names to all match ,className名称全部匹配
      */
     String[] onClass() default {};
 }

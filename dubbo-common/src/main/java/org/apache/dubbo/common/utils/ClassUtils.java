@@ -17,6 +17,7 @@
 package org.apache.dubbo.common.utils;
 
 import org.apache.dubbo.common.convert.ConverterUtil;
+import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.rpc.model.FrameworkModel;
 
 import java.lang.reflect.Array;
@@ -74,21 +75,21 @@ public class ClassUtils {
      * @since 2.7.6
      */
     public static final Set<Class<?>> SIMPLE_TYPES = ofSet(
-            Void.class,
-            Boolean.class,
-            Character.class,
-            Byte.class,
-            Short.class,
-            Integer.class,
-            Long.class,
-            Float.class,
-            Double.class,
-            String.class,
-            BigDecimal.class,
-            BigInteger.class,
-            Date.class,
-            Object.class,
-            Duration.class);
+        Void.class,
+        Boolean.class,
+        Character.class,
+        Byte.class,
+        Short.class,
+        Integer.class,
+        Long.class,
+        Float.class,
+        Double.class,
+        String.class,
+        BigDecimal.class,
+        BigInteger.class,
+        Date.class,
+        Object.class,
+        Duration.class);
     /**
      * Prefix for internal array class names: "[L"
      */
@@ -96,6 +97,7 @@ public class ClassUtils {
     /**
      * Map with primitive type name as key and corresponding primitive type as
      * value, for example: "int" -> "int.class".
+     * 8中基本数据类型及void,还有它们的数组
      */
     private static final Map<String, Class<?>> PRIMITIVE_TYPE_NAME_MAP = new HashMap<>(32);
     /**
@@ -118,14 +120,14 @@ public class ClassUtils {
         Set<Class<?>> primitiveTypeNames = new HashSet<>(32);
         primitiveTypeNames.addAll(PRIMITIVE_WRAPPER_TYPE_MAP.values());
         primitiveTypeNames.addAll(Arrays.asList(
-                boolean[].class,
-                byte[].class,
-                char[].class,
-                double[].class,
-                float[].class,
-                int[].class,
-                long[].class,
-                short[].class));
+            boolean[].class,
+            byte[].class,
+            char[].class,
+            double[].class,
+            float[].class,
+            int[].class,
+            long[].class,
+            short[].class));
         for (Class<?> primitiveTypeName : primitiveTypeNames) {
             PRIMITIVE_TYPE_NAME_MAP.put(primitiveTypeName.getName(), primitiveTypeName);
         }
@@ -218,6 +220,9 @@ public class ClassUtils {
      * Replacement for <code>Class.forName()</code> that also returns Class
      * instances for primitives (like "int") and array class names (like
      * "String[]").
+     * <p>
+     * {@link ClassUtils#isPresent(java.lang.String, java.lang.ClassLoader)}中调用
+     * </p>
      *
      * @param name        the name of the Class
      * @param classLoader the class loader to use (may be <code>null</code>,
@@ -228,7 +233,10 @@ public class ClassUtils {
      * @see Class#forName(String, boolean, ClassLoader)
      */
     public static Class<?> forName(String name, ClassLoader classLoader) throws ClassNotFoundException, LinkageError {
-
+        /**
+         * 是否是8种基本数据类型或者void，或者这9种数据类型的数组形式
+         * 如果是，返回
+         */
         Class<?> clazz = resolvePrimitiveClassName(name);
         if (clazz != null) {
             return clazz;
@@ -236,6 +244,7 @@ public class ClassUtils {
 
         // "java.lang.String[]" style arrays
         if (name.endsWith(ARRAY_SUFFIX)) {
+            // 数组
             String elementClassName = name.substring(0, name.length() - ARRAY_SUFFIX.length());
             Class<?> elementClass = forName(elementClassName, classLoader);
             return Array.newInstance(elementClass, 0).getClass();
@@ -338,7 +347,7 @@ public class ClassUtils {
         Object result = null;
         try {
             result =
-                    frameworkModel.getBeanFactory().getBean(ConverterUtil.class).convertIfPossible(value, wrapperType);
+                frameworkModel.getBeanFactory().getBean(ConverterUtil.class).convertIfPossible(value, wrapperType);
         } catch (Exception e) {
             // ignore exception
         }
@@ -460,6 +469,10 @@ public class ClassUtils {
 
     /**
      * Test the specified class name is present in the {@link ClassLoader}
+     * 通过classLoader加载className，如果有异常返回false，否则返回true
+     * <p>
+     * {@link ExtensionLoader#loadClassIfActive(java.lang.ClassLoader, java.lang.Class)}中调用
+     * </p>
      *
      * @param className   the name of {@link Class}
      * @param classLoader {@link ClassLoader}
@@ -515,7 +528,7 @@ public class ClassUtils {
         return false;
     }
 
-    private static final String[] OBJECT_METHODS = new String[] {"getClass", "hashCode", "toString", "equals"};
+    private static final String[] OBJECT_METHODS = new String[]{"getClass", "hashCode", "toString", "equals"};
 
     /**
      * get method name array.
@@ -527,7 +540,7 @@ public class ClassUtils {
             return OBJECT_METHODS;
         }
         Method[] methods =
-                Arrays.stream(tClass.getMethods()).collect(Collectors.toList()).toArray(new Method[] {});
+            Arrays.stream(tClass.getMethods()).collect(Collectors.toList()).toArray(new Method[]{});
         List<String> mns = new ArrayList<>(); // method names.
         boolean hasMethod = hasMethods(methods);
         if (hasMethod) {
@@ -591,7 +604,7 @@ public class ClassUtils {
             return OBJECT_METHODS;
         }
         Method[] methods =
-                Arrays.stream(tClass.getMethods()).collect(Collectors.toList()).toArray(new Method[] {});
+            Arrays.stream(tClass.getMethods()).collect(Collectors.toList()).toArray(new Method[]{});
         List<String> dmns = new ArrayList<>(); // method names.
         boolean hasMethod = hasMethods(methods);
         if (hasMethod) {
