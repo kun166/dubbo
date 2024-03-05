@@ -94,11 +94,22 @@ public abstract class ScopeModel implements ExtensionAccessor {
     protected final Object instLock = new Object();
 
     /**
+     * <p>
      * {@link FrameworkModel#FrameworkModel()}中调用
+     * parent     null
+     * scope      {@link ExtensionScope#FRAMEWORK}
+     * isInternal 传的是false
+     * </p>
+     * <p>
+     * {@link ApplicationModel#ApplicationModel(org.apache.dubbo.rpc.model.FrameworkModel, boolean)}中调用
+     * parent     {@link FrameworkModel#defaultInstance}
+     * scope      {@link ExtensionScope#APPLICATION}
+     * isInternal 传的是false
+     * </p>
      *
-     * @param parent     null
-     * @param scope      {@link ExtensionScope#FRAMEWORK}
-     * @param isInternal 传的是false
+     * @param parent
+     * @param scope
+     * @param isInternal
      */
     protected ScopeModel(ScopeModel parent, ExtensionScope scope, boolean isInternal) {
         this.parent = parent;
@@ -110,9 +121,9 @@ public abstract class ScopeModel implements ExtensionAccessor {
      * NOTE:
      * <ol>
      *  <li>The initialize method only be called in subclass.</li>
-     * <li>
-     * In subclass, the extensionDirector and beanFactory are available in initialize but not available in constructor.
-     * </li>
+     *  <li>该initialize方法只会在子类中调用。</li>
+     *  <li>In subclass, the extensionDirector and beanFactory are available in initialize but not available in constructor.</li>
+     *  <li>在子类中,extensionDirector和beanFactory在initialize中可用，但在构造函数中不可用。</li>
      * </ol>
      * <p>
      * {@link FrameworkModel#FrameworkModel()}中调用

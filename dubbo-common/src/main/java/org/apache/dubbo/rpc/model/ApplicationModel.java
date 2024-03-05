@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc.model;
 
+import org.apache.dubbo.common.CommonScopeModelInitializer;
 import org.apache.dubbo.common.config.Environment;
 import org.apache.dubbo.common.context.ApplicationExt;
 import org.apache.dubbo.common.deploy.ApplicationDeployer;
@@ -60,6 +61,9 @@ public class ApplicationModel extends ScopeModel {
     private volatile ServiceRepository serviceRepository;
     private volatile ApplicationDeployer deployer;
 
+    /**
+     * {@link FrameworkModel#defaultInstance}
+     */
     private final FrameworkModel frameworkModel;
 
     private final ModuleModel internalModule;
@@ -93,10 +97,25 @@ public class ApplicationModel extends ScopeModel {
 
     // ------------- instance methods ---------------//
 
+    /**
+     * <p>
+     * {@link FrameworkModel#newApplication()}中调用
+     * </p>
+     *
+     * @param frameworkModel {@link FrameworkModel#defaultInstance}
+     */
     protected ApplicationModel(FrameworkModel frameworkModel) {
         this(frameworkModel, false);
     }
 
+    /**
+     * <p>
+     * {@link ApplicationModel#ApplicationModel(org.apache.dubbo.rpc.model.FrameworkModel)}中调用
+     * </p>
+     *
+     * @param frameworkModel {@link FrameworkModel#defaultInstance}
+     * @param isInternal     false
+     */
     protected ApplicationModel(FrameworkModel frameworkModel, boolean isInternal) {
         super(frameworkModel, ExtensionScope.APPLICATION, isInternal);
         synchronized (instLock) {
@@ -112,7 +131,7 @@ public class ApplicationModel extends ScopeModel {
             this.serviceRepository = new ServiceRepository(this);
 
             ExtensionLoader<ApplicationInitListener> extensionLoader =
-                    this.getExtensionLoader(ApplicationInitListener.class);
+                this.getExtensionLoader(ApplicationInitListener.class);
             Set<String> listenerNames = extensionLoader.getSupportedExtensions();
             for (String listenerName : listenerNames) {
                 extensionLoader.getExtension(listenerName).init();
@@ -121,7 +140,11 @@ public class ApplicationModel extends ScopeModel {
             initApplicationExts();
 
             ExtensionLoader<ScopeModelInitializer> initializerExtensionLoader =
-                    this.getExtensionLoader(ScopeModelInitializer.class);
+                this.getExtensionLoader(ScopeModelInitializer.class);
+            /**
+             * dubbo-common={@link org.apache.dubbo.common.CommonScopeModelInitializer}
+             * {@link CommonScopeModelInitializer#initializeApplicationModel(org.apache.dubbo.rpc.model.ApplicationModel)}
+             */
             Set<ScopeModelInitializer> initializers = initializerExtensionLoader.getSupportedExtensionInstances();
             for (ScopeModelInitializer initializer : initializers) {
                 initializer.initializeApplicationModel(this);
@@ -130,7 +153,7 @@ public class ApplicationModel extends ScopeModel {
             Assert.notNull(getApplicationServiceRepository(), "ApplicationServiceRepository can not be null");
             Assert.notNull(getApplicationConfigManager(), "ApplicationConfigManager can not be null");
             Assert.assertTrue(
-                    getApplicationConfigManager().isInitialized(), "ApplicationConfigManager can not be initialized");
+                getApplicationConfigManager().isInitialized(), "ApplicationConfigManager can not be initialized");
         }
     }
 
@@ -207,7 +230,7 @@ public class ApplicationModel extends ScopeModel {
     public Environment modelEnvironment() {
         if (environment == null) {
             environment =
-                    (Environment) this.getExtensionLoader(ApplicationExt.class).getExtension(Environment.NAME);
+                (Environment) this.getExtensionLoader(ApplicationExt.class).getExtension(Environment.NAME);
         }
         return environment;
     }
@@ -215,7 +238,7 @@ public class ApplicationModel extends ScopeModel {
     public ConfigManager getApplicationConfigManager() {
         if (configManager == null) {
             configManager = (ConfigManager)
-                    this.getExtensionLoader(ApplicationExt.class).getExtension(ConfigManager.NAME);
+                this.getExtensionLoader(ApplicationExt.class).getExtension(ConfigManager.NAME);
         }
         return configManager;
     }
@@ -242,7 +265,7 @@ public class ApplicationModel extends ScopeModel {
 
     public String tryGetApplicationName() {
         Optional<ApplicationConfig> appCfgOptional =
-                getApplicationConfigManager().getApplication();
+            getApplicationConfigManager().getApplication();
         return appCfgOptional.isPresent() ? appCfgOptional.get().getName() : null;
     }
 
@@ -272,7 +295,7 @@ public class ApplicationModel extends ScopeModel {
     void tryDestroy() {
         synchronized (instLock) {
             if (this.moduleModels.isEmpty()
-                    || (this.moduleModels.size() == 1 && this.moduleModels.get(0) == internalModule)) {
+                || (this.moduleModels.size() == 1 && this.moduleModels.get(0) == internalModule)) {
                 destroy();
             }
         }
@@ -344,7 +367,7 @@ public class ApplicationModel extends ScopeModel {
 
     protected boolean containsClassLoader(ClassLoader classLoader) {
         return moduleModels.stream()
-                .anyMatch(moduleModel -> moduleModel.getClassLoaders().contains(classLoader));
+            .anyMatch(moduleModel -> moduleModel.getClassLoaders().contains(classLoader));
     }
 
     public ApplicationDeployer getDeployer() {

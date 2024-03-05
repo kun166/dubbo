@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc.model;
 
+import org.apache.dubbo.common.CommonScopeModelInitializer;
 import org.apache.dubbo.common.config.Environment;
 import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.ExtensionLoader;
@@ -66,8 +67,15 @@ public class FrameworkModel extends ScopeModel {
 
     private volatile ApplicationModel defaultAppModel;
 
+    /**
+     * {@link FrameworkModel#addApplication(org.apache.dubbo.rpc.model.ApplicationModel)}中添加
+     */
     private final List<ApplicationModel> applicationModels = new CopyOnWriteArrayList<>();
 
+    /**
+     * {@link FrameworkModel#addApplication(org.apache.dubbo.rpc.model.ApplicationModel)}中添加
+     * {@link ScopeModel#internalScope}为false的时候添加
+     */
     private final List<ApplicationModel> pubApplicationModels = new CopyOnWriteArrayList<>();
 
     private final FrameworkServiceRepository serviceRepository;
@@ -102,6 +110,10 @@ public class FrameworkModel extends ScopeModel {
 
                 ExtensionLoader<ScopeModelInitializer> initializerExtensionLoader =
                     this.getExtensionLoader(ScopeModelInitializer.class);
+                /**
+                 * dubbo-common={@link org.apache.dubbo.common.CommonScopeModelInitializer}
+                 * {@link CommonScopeModelInitializer#initializeFrameworkModel(org.apache.dubbo.rpc.model.FrameworkModel)}
+                 */
                 Set<ScopeModelInitializer> initializers = initializerExtensionLoader.getSupportedExtensionInstances();
                 for (ScopeModelInitializer initializer : initializers) {
                     initializer.initializeFrameworkModel(this);
@@ -229,6 +241,14 @@ public class FrameworkModel extends ScopeModel {
         }
     }
 
+    /**
+     * <p>
+     * {@link FrameworkModel#defaultApplication()}中调用
+     * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#initContext}中调用
+     * </p>
+     *
+     * @return
+     */
     public ApplicationModel newApplication() {
         synchronized (instLock) {
             return new ApplicationModel(this);
@@ -263,6 +283,11 @@ public class FrameworkModel extends ScopeModel {
         return defaultAppModel;
     }
 
+    /**
+     * {@link ApplicationModel#ApplicationModel(org.apache.dubbo.rpc.model.FrameworkModel, boolean)}中调用
+     *
+     * @param applicationModel
+     */
     void addApplication(ApplicationModel applicationModel) {
         // can not add new application if it's destroying
         checkDestroyed();

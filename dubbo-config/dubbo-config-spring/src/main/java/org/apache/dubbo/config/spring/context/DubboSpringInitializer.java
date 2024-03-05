@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
@@ -132,27 +133,48 @@ public class DubboSpringInitializer {
         context.setBeanFactory(beanFactory);
 
         // customize context, you can change the bind module model via DubboSpringInitCustomizer SPI
+        // 自定义上下文，您可以通过DubboSpringInitCustomizer SPI更改绑定模块模型
+        // 目前这个定制为空，如果有需要，可以自己定制
         customize(context);
 
         // init ModuleModel
+        /**
+         * 初始化 ModuleModel。
+         * 这个很重要：
+         * 比如{@link org.apache.dubbo.config.spring.ServiceBean}的加载模式{@link AbstractBeanDefinition#autowireMode}
+         * 是{@link AutowireCapableBeanFactory#AUTOWIRE_CONSTRUCTOR},构造器中就需要这个对象
+         */
         ModuleModel moduleModel = context.getModuleModel();
         if (moduleModel == null) {
             ApplicationModel applicationModel;
             if (findContextForApplication(ApplicationModel.defaultModel()) == null) {
                 // first spring context use default application instance
+                /**
+                 *{@link ApplicationModel#defaultModel()}返回的是{@link FrameworkModel.defaultModel().defaultApplication()},
+                 * 即：{@link FrameworkModel#defaultModel()}的{@link FrameworkModel#defaultApplication()}
+                 */
                 applicationModel = ApplicationModel.defaultModel();
                 logger.info("Use default application: " + applicationModel.getDesc());
             } else {
                 // create a new application instance for later spring context
+                /**
+                 * 说明{@link ApplicationModel#defaultModel()}已经绑定到了其它{@link DubboSpringInitContext}上了
+                 * 重新生成一个
+                 */
                 applicationModel = FrameworkModel.defaultModel().newApplication();
                 logger.info("Create new application: " + applicationModel.getDesc());
             }
 
             // init ModuleModel
+            /**
+             * 从这里可以看到,{@link DubboSpringInitContext#moduleModel}
+             * 是从{@link ApplicationModel#getDefaultModule()}获取的
+             */
             moduleModel = applicationModel.getDefaultModule();
             context.setModuleModel(moduleModel);
             logger.info("Use default module model of target application: " + moduleModel.getDesc());
         } else {
+            // 说明这个moduleModel已经在定制化的代码中，设置了
             logger.info("Use module model from customizer: " + moduleModel.getDesc());
         }
         logger.info(
@@ -205,6 +227,17 @@ public class DubboSpringInitializer {
         beanFactory.registerSingleton(bean.getClass().getName(), bean);
     }
 
+    /**
+     * 从{@link DubboSpringInitializer#contextMap}中,寻找{@link DubboSpringInitContext#moduleModel}的
+     * {@link ModuleModel#applicationModel}为传入的applicationModel的{@link DubboSpringInitContext}
+     * <p>
+     * {@link DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
+     * 中调用
+     * </p>
+     *
+     * @param applicationModel
+     * @return
+     */
     private static DubboSpringInitContext findContextForApplication(ApplicationModel applicationModel) {
         for (DubboSpringInitContext initializationContext : contextMap.values()) {
             if (initializationContext.getApplicationModel() == applicationModel) {
@@ -215,14 +248,22 @@ public class DubboSpringInitializer {
     }
 
     /**
+     * 定制化,寻找定制的{@link DubboSpringInitCustomizer}实现，
+     * 调用其{@link DubboSpringInitCustomizer#customize(org.apache.dubbo.config.spring.context.DubboSpringInitContext)}
+     * 接口
+     * <p>
      * {@link DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
      * 中调用
+     * </p>
      *
      * @param context
      */
     private static void customize(DubboSpringInitContext context) {
 
         // find initialization customizers
+        /**
+         * 这个扩展目前为空，如果需要的话，自己定制
+         */
         Set<DubboSpringInitCustomizer> customizers = FrameworkModel.defaultModel()
             /**
              * 调用的是{@link ExtensionDirector#getExtensionLoader(java.lang.Class)}

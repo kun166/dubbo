@@ -26,6 +26,7 @@ import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.resource.Disposable;
 import org.apache.dubbo.common.utils.ConcurrentHashMapUtils;
 import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelAccessor;
 
 import java.util.ArrayList;
@@ -46,7 +47,22 @@ public class ScopeBeanFactory {
 
     protected static final ErrorTypeAwareLogger LOGGER = LoggerFactory.getErrorTypeAwareLogger(ScopeBeanFactory.class);
 
+    /**
+     * {@link ScopeBeanFactory#ScopeBeanFactory(org.apache.dubbo.common.beans.factory.ScopeBeanFactory, org.apache.dubbo.common.extension.ExtensionAccessor)}
+     * 构造函数中初始化
+     * {@link org.apache.dubbo.rpc.model.ApplicationModel}中传递的是FrameworkModel的
+     * {@link org.apache.dubbo.rpc.model.FrameworkModel} 中null
+     * {@link org.apache.dubbo.rpc.model.ModuleModel}
+     */
     private final ScopeBeanFactory parent;
+
+    /**
+     * {@link ScopeBeanFactory#ScopeBeanFactory(org.apache.dubbo.common.beans.factory.ScopeBeanFactory, org.apache.dubbo.common.extension.ExtensionAccessor)}
+     * 构造函数中初始化
+     * {@link org.apache.dubbo.rpc.model.ApplicationModel}
+     * {@link org.apache.dubbo.rpc.model.FrameworkModel}
+     * {@link org.apache.dubbo.rpc.model.ModuleModel}
+     */
     private final ExtensionAccessor extensionAccessor;
     private final List<ExtensionPostProcessor> extensionPostProcessors;
     private final ConcurrentHashMap<Class<?>, AtomicInteger> beanNameIdCounterMap = new ConcurrentHashMap<>();
@@ -55,6 +71,14 @@ public class ScopeBeanFactory {
     private final AtomicBoolean destroyed = new AtomicBoolean();
     private List<Class<?>> registeredClasses = new ArrayList<>();
 
+    /**
+     * <p>
+     * {@link ScopeModel#initialize()}中调用
+     * </p>
+     *
+     * @param parent
+     * @param extensionAccessor {@link ScopeModel#extensionDirector}
+     */
     public ScopeBeanFactory(ScopeBeanFactory parent, ExtensionAccessor extensionAccessor) {
         this.parent = parent;
         this.extensionAccessor = extensionAccessor;
@@ -87,7 +111,7 @@ public class ScopeBeanFactory {
         T instance = getBean(name, clazz);
         if (instance != null) {
             throw new ScopeBeanException(
-                    "already exists bean with same name and type, name=" + name + ", type=" + clazz.getName());
+                "already exists bean with same name and type, name=" + name + ", type=" + clazz.getName());
         }
         try {
             instance = instantiationStrategy.instantiate(clazz);
@@ -142,7 +166,7 @@ public class ScopeBeanFactory {
     }
 
     public <T> T getOrRegisterBean(
-            String name, Class<T> type, Function<? super Class<T>, ? extends T> mappingFunction) {
+        String name, Class<T> type, Function<? super Class<T>, ? extends T> mappingFunction) {
         T bean = getBean(name, type);
         if (bean == null) {
             // lock by type
@@ -168,9 +192,9 @@ public class ScopeBeanFactory {
             }
         } catch (Exception e) {
             throw new ScopeBeanException(
-                    "register bean failed! name=" + name + ", type="
-                            + bean.getClass().getName(),
-                    e);
+                "register bean failed! name=" + name + ", type="
+                    + bean.getClass().getName(),
+                e);
         }
     }
 
@@ -185,15 +209,15 @@ public class ScopeBeanFactory {
 
     private int getNextId(Class<?> beanClass) {
         return ConcurrentHashMapUtils.computeIfAbsent(beanNameIdCounterMap, beanClass, key -> new AtomicInteger())
-                .incrementAndGet();
+            .incrementAndGet();
     }
 
     @SuppressWarnings("unchecked")
     public <T> List<T> getBeansOfType(Class<T> type) {
         List<T> currentBeans = (List<T>) registeredBeanInfos.stream()
-                .filter(beanInfo -> type.isInstance(beanInfo.instance))
-                .map(beanInfo -> beanInfo.instance)
-                .collect(Collectors.toList());
+            .filter(beanInfo -> type.isInstance(beanInfo.instance))
+            .map(beanInfo -> beanInfo.instance)
+            .collect(Collectors.toList());
         if (parent != null) {
             currentBeans.addAll(parent.getBeansOfType(type));
         }
@@ -247,9 +271,9 @@ public class ScopeBeanFactory {
                 return (T) candidates.get(0).instance;
             } else if (candidates.size() > 1) {
                 List<String> candidateBeanNames =
-                        candidates.stream().map(beanInfo -> beanInfo.name).collect(Collectors.toList());
+                    candidates.stream().map(beanInfo -> beanInfo.name).collect(Collectors.toList());
                 throw new ScopeBeanException("expected single matching bean but found " + candidates.size()
-                        + " candidates for type [" + type.getName() + "]: " + candidateBeanNames);
+                    + " candidates for type [" + type.getName() + "]: " + candidateBeanNames);
             }
         } else if (firstCandidate != null) {
             return (T) firstCandidate.instance;
@@ -266,12 +290,12 @@ public class ScopeBeanFactory {
                         beanInstance.destroy();
                     } catch (Throwable e) {
                         LOGGER.error(
-                                CONFIG_FAILED_DESTROY_INVOKER,
-                                "",
-                                "",
-                                "An error occurred when destroy bean [name=" + beanInfo.name + ", bean="
-                                        + beanInfo.instance + "]: " + e,
-                                e);
+                            CONFIG_FAILED_DESTROY_INVOKER,
+                            "",
+                            "",
+                            "An error occurred when destroy bean [name=" + beanInfo.name + ", bean="
+                                + beanInfo.instance + "]: " + e,
+                            e);
                     }
                 }
             }

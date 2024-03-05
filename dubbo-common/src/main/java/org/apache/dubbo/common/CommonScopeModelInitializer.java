@@ -32,6 +32,14 @@ import org.apache.dubbo.rpc.model.ModuleModel;
 import org.apache.dubbo.rpc.model.ScopeModelInitializer;
 
 public class CommonScopeModelInitializer implements ScopeModelInitializer {
+
+    /**
+     * <p>
+     * {@link FrameworkModel#FrameworkModel()}中调用
+     * </p>
+     *
+     * @param frameworkModel
+     */
     @Override
     public void initializeFrameworkModel(FrameworkModel frameworkModel) {
         ScopeBeanFactory beanFactory = frameworkModel.getBeanFactory();
@@ -42,6 +50,11 @@ public class CommonScopeModelInitializer implements ScopeModelInitializer {
         beanFactory.registerBean(CertManager.class);
     }
 
+    /**
+     * {@link ApplicationModel#ApplicationModel(org.apache.dubbo.rpc.model.FrameworkModel, boolean)}中调用
+     *
+     * @param applicationModel
+     */
     @Override
     public void initializeApplicationModel(ApplicationModel applicationModel) {
         ScopeBeanFactory beanFactory = applicationModel.getBeanFactory();

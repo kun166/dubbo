@@ -36,8 +36,20 @@ import java.util.Set;
  */
 public class TypeDefinitionBuilder {
     private static final Logger logger = LoggerFactory.getLogger(TypeDefinitionBuilder.class);
+
+    /**
+     * array={@link org.apache.dubbo.metadata.definition.builder.ArrayTypeBuilder}
+     * collection={@link org.apache.dubbo.metadata.definition.builder.CollectionTypeBuilder}
+     * map={@link org.apache.dubbo.metadata.definition.builder.MapTypeBuilder}
+     * enum={@link org.apache.dubbo.metadata.definition.builder.EnumTypeBuilder}
+     */
     public static List<TypeBuilder> BUILDERS;
 
+    /**
+     * {@link FrameworkModel#FrameworkModel()}中调用
+     *
+     * @param model
+     */
     public static void initBuilders(FrameworkModel model) {
         Set<TypeBuilder> tbs = model.getExtensionLoader(TypeBuilder.class).getSupportedExtensionInstances();
         BUILDERS = new ArrayList<>(tbs);

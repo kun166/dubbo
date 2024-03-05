@@ -41,6 +41,9 @@ public class ExtensionDirector implements ExtensionAccessor {
      */
     private final ConcurrentMap<Class<?>, ExtensionScope> extensionScopeMap = new ConcurrentHashMap<>(64);
     private final ExtensionDirector parent;
+    /**
+     * 如果是{@link FrameworkModel},这个是{@link ExtensionScope#FRAMEWORK}
+     */
     private final ExtensionScope scope;
 
     /**
@@ -56,7 +59,15 @@ public class ExtensionDirector implements ExtensionAccessor {
     private final AtomicBoolean destroyed = new AtomicBoolean();
 
     /**
+     * <p>
      * {@link ScopeModel#initialize()}中调用
+     * </p>
+     * <p>
+     * 根据创建的地方不同，传参也不同
+     * {@link org.apache.dubbo.rpc.model.ApplicationModel}
+     * {@link FrameworkModel}
+     * {@link org.apache.dubbo.rpc.model.ModuleModel}
+     * </p>
      *
      * @param parent
      * @param scope      传递的是{@link ExtensionScope#FRAMEWORK}

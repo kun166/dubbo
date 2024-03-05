@@ -1028,6 +1028,15 @@ public class ExtensionLoader<T> {
     /**
      * synchronized in getExtensionClasses
      * <p>
+     * 这个地方是通过{@link SPI}实现的,
+     * META-INF/services/org.apache.dubbo.common.extension.LoadingStrategy
+     * 找到LoadingStrategy的三个实现类。
+     * {@link DubboInternalLoadingStrategy}
+     * {@link DubboLoadingStrategy}
+     * {@link ServicesLoadingStrategy}
+     * 分别在这三种加载模式中，寻找{@link ExtensionLoader#type}的实现扩展类，返回
+     * </p>
+     * <p>
      * {@link ExtensionLoader#getExtensionClasses()}
      * 中调用
      * </p>
