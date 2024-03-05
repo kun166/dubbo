@@ -122,15 +122,25 @@ public class ExtensionLoader<T> {
 
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
+    /**
+     * {@link ExtensionLoader#cacheActivateClass(java.lang.Class, java.lang.String)}
+     * 中添加元素
+     */
     private final Map<String, Object> cachedActivates = Collections.synchronizedMap(new LinkedHashMap<>());
     private final Map<String, Set<String>> cachedActivateGroups = Collections.synchronizedMap(new LinkedHashMap<>());
     private final Map<String, String[][]> cachedActivateValues = Collections.synchronizedMap(new LinkedHashMap<>());
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
     private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
+    /**
+     * {@link ExtensionLoader#cacheAdaptiveClass(java.lang.Class, boolean)}中设置值
+     */
     private volatile Class<?> cachedAdaptiveClass = null;
     private String cachedDefaultName;
     private volatile Throwable createAdaptiveInstanceError;
 
+    /**
+     * {@link ExtensionLoader#cacheWrapperClass(java.lang.Class)}中有添加
+     */
     private Set<Class<?>> cachedWrapperClasses;
 
     private final Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<>();
@@ -1425,11 +1435,11 @@ public class ExtensionLoader<T> {
      * 中调用
      * </p>
      *
-     * @param classLoader
-     * @param extensionClasses
-     * @param resourceURL
-     * @param clazz
-     * @param name
+     * @param classLoader      类加载器
+     * @param extensionClasses 加载扩展class的缓存map
+     * @param resourceURL      配置的资源，好像用来打日志了
+     * @param clazz            扩展class
+     * @param name             配置文件中每一行的配置的key
      * @param overridden       false
      */
     private void loadClass(ClassLoader classLoader,
@@ -1463,7 +1473,9 @@ public class ExtensionLoader<T> {
                         + " in the config " + resourceURL);
                 }
             }
-
+            /**
+             * 以","分割
+             */
             String[] names = NAME_SEPARATOR.split(name);
             if (ArrayUtils.isNotEmpty(names)) {
                 cacheActivateClass(clazz, names[0]);
@@ -1522,6 +1534,12 @@ public class ExtensionLoader<T> {
 
     /**
      * cache name
+     * 将clazz和name关系保存在{@link ExtensionLoader#cachedNames}中。
+     * 从代码中来看，只会在第一次调用中建立关系。
+     * <p>
+     * {@link ExtensionLoader#loadClass(java.lang.ClassLoader, java.util.Map, java.net.URL, java.lang.Class, java.lang.String, boolean)}
+     * 中调用
+     * </p>
      */
     private void cacheName(Class<?> clazz, String name) {
         if (!cachedNames.containsKey(clazz)) {
@@ -1531,9 +1549,21 @@ public class ExtensionLoader<T> {
 
     /**
      * put clazz in extensionClasses
+     * 将name和clazz添加到extensionClasses中,key为name,value为clazz
+     * <p>
+     * {@link ExtensionLoader#loadClass(java.lang.ClassLoader, java.util.Map, java.net.URL, java.lang.Class, java.lang.String, boolean)}
+     * 中调用
+     * </p>
+     *
+     * @param extensionClasses
+     * @param clazz
+     * @param name
+     * @param overridden
      */
-    private void saveInExtensionClass(
-        Map<String, Class<?>> extensionClasses, Class<?> clazz, String name, boolean overridden) {
+    private void saveInExtensionClass(Map<String, Class<?>> extensionClasses,
+                                      Class<?> clazz,
+                                      String name,
+                                      boolean overridden) {
         Class<?> c = extensionClasses.get(name);
         if (c == null || overridden) {
             extensionClasses.put(name, clazz);
@@ -1551,6 +1581,11 @@ public class ExtensionLoader<T> {
      * cache Activate class which is annotated with <code>Activate</code>
      * <p>
      * for compatibility, also cache class with old alibaba Activate annotation
+     * 如果clazz上有注解{@link Activate},则将其添加到{@link ExtensionLoader#cachedActivates}里，key为name,value为{@link Activate}
+     * <p>
+     * {@link ExtensionLoader#loadClass(java.lang.ClassLoader, java.util.Map, java.net.URL, java.lang.Class, java.lang.String, boolean)}
+     * 中调用
+     * </p>
      */
     @SuppressWarnings("deprecation")
     private void cacheActivateClass(Class<?> clazz, String name) {
@@ -1566,8 +1601,18 @@ public class ExtensionLoader<T> {
         }
     }
 
+
     /**
      * cache Adaptive class which is annotated with <code>Adaptive</code>
+     * 如果clazz上有{@link Adaptive}注解。
+     * 将{@link ExtensionLoader#cachedAdaptiveClass}设置为参数clazz
+     * <p>
+     * {@link ExtensionLoader#loadClass(java.lang.ClassLoader, java.util.Map, java.net.URL, java.lang.Class, java.lang.String, boolean)}
+     * 中调用
+     * </p>
+     *
+     * @param clazz
+     * @param overridden
      */
     private void cacheAdaptiveClass(Class<?> clazz, boolean overridden) {
         if (cachedAdaptiveClass == null || overridden) {
@@ -1582,6 +1627,11 @@ public class ExtensionLoader<T> {
      * cache wrapper class
      * <p>
      * like: ProtocolFilterWrapper, ProtocolListenerWrapper
+     * 如果clazz是一个包装类，则将其添加到{@link ExtensionLoader#cachedWrapperClasses}中
+     * <p>
+     * {@link ExtensionLoader#loadClass(java.lang.ClassLoader, java.util.Map, java.net.URL, java.lang.Class, java.lang.String, boolean)}
+     * 中调用
+     * </p>
      */
     private void cacheWrapperClass(Class<?> clazz) {
         if (cachedWrapperClasses == null) {
@@ -1594,6 +1644,18 @@ public class ExtensionLoader<T> {
      * test if clazz is a wrapper class
      * <p>
      * which has Constructor with given class type as its only argument
+     * 判断传入的clazz是否是个包装类。
+     * 判断方式:
+     * 1,获取所有的构造器
+     * 2,遍历每一个构造器,如果该构造器只有一个参数，且参数类型是{@link ExtensionLoader#type},则为包装类
+     * 3,不是包装类
+     * <p>
+     * {@link ExtensionLoader#loadClass(java.lang.ClassLoader, java.util.Map, java.net.URL, java.lang.Class, java.lang.String, boolean)}
+     * 中调用
+     * </p>
+     *
+     * @param clazz
+     * @return
      */
     protected boolean isWrapperClass(Class<?> clazz) {
         Constructor<?>[] constructors = clazz.getConstructors();
@@ -1605,6 +1667,19 @@ public class ExtensionLoader<T> {
         return false;
     }
 
+    /**
+     * 获取clazz的name
+     * 1,如果参数clazz上有注解{@link Extension},返回{@link Extension#value()}
+     * 2,如果clazz的简单类名(不包括包名),以{@link ExtensionLoader#type}的简单类名结尾，返回之前的部分(全部小写)
+     * 3,返回clazz的简单类名(全小写)
+     * <p>
+     * {@link ExtensionLoader#loadClass(java.lang.ClassLoader, java.util.Map, java.net.URL, java.lang.Class, java.lang.String, boolean)}
+     * 中调用
+     * </p>
+     *
+     * @param clazz
+     * @return
+     */
     @SuppressWarnings("deprecation")
     private String findAnnotationName(Class<?> clazz) {
         Extension extension = clazz.getAnnotation(Extension.class);

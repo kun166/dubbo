@@ -52,6 +52,9 @@ public @interface Adaptive {
      * class name with the rule: divide classname from capital char into several parts, and separate the parts with
      * dot '.', for example, for {@code org.apache.dubbo.xxx.YyyInvokerWrapper}, the generated name is
      * <code>String[] {"yyy.invoker.wrapper"}</code>.
+     * <p>
+     * 关于{@link Adaptive},参考下https://www.jianshu.com/p/0905fc2511c2吧，也没看懂
+     * </p>
      *
      * @return parameter names in URL
      */
