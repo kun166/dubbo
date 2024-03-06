@@ -25,18 +25,18 @@ import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.FrameworkModel;
 import org.apache.dubbo.rpc.model.ModuleModel;
 import org.apache.dubbo.rpc.model.ScopeModel;
-
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.util.ObjectUtils;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Dubbo spring initialization entry point
@@ -187,6 +187,12 @@ public class DubboSpringInitializer {
         }
 
         // bind dubbo initialization context to spring context
+        /**
+         * 1,将参数中的context,以class 全限定名为beanName,以context为singletonObject,
+         * 调用{@link DefaultListableBeanFactory#registerSingleton(java.lang.String, java.lang.Object)}注册bean
+         * 2,将参数中的context的{@link DubboSpringInitContext#getApplicationModel()},以相同方式注册到spring中
+         * 3,将参数中的context的{@link DubboSpringInitContext#getModuleModel()},以相同方式注册到spring中
+         */
         registerContextBeans(beanFactory, context);
 
         // mark context as bound
@@ -194,6 +200,7 @@ public class DubboSpringInitializer {
         moduleModel.setLifeCycleManagedExternally(true);
 
         // register common beans
+        // 下面逻辑很重要，有时间再看吧
         DubboBeanUtils.registerCommonBeans(registry);
     }
 
@@ -215,14 +222,38 @@ public class DubboSpringInitializer {
         return beanFactory;
     }
 
-    private static void registerContextBeans(
-        ConfigurableListableBeanFactory beanFactory, DubboSpringInitContext context) {
+    /**
+     * 1,将参数中的context,以class 全限定名为beanName,以context为singletonObject,
+     * 调用{@link DefaultListableBeanFactory#registerSingleton(java.lang.String, java.lang.Object)}注册bean
+     * 2,将参数中的context的{@link DubboSpringInitContext#getApplicationModel()},以相同方式注册到spring中
+     * 3,将参数中的context的{@link DubboSpringInitContext#getModuleModel()},以相同方式注册到spring中
+     * <p>
+     * {@link DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
+     * 中调用
+     * </p>
+     *
+     * @param beanFactory
+     * @param context
+     */
+    private static void registerContextBeans(ConfigurableListableBeanFactory beanFactory,
+                                             DubboSpringInitContext context) {
         // register singleton
         registerSingleton(beanFactory, context);
         registerSingleton(beanFactory, context.getApplicationModel());
         registerSingleton(beanFactory, context.getModuleModel());
     }
 
+    /**
+     * 以传入的bean的class的全类名为beanName,以bean为singletonObject,
+     * 调用{@link DefaultListableBeanFactory#registerSingleton(java.lang.String, java.lang.Object)}注册bean
+     * <p>
+     * {@link DubboSpringInitializer#registerContextBeans(org.springframework.beans.factory.config.ConfigurableListableBeanFactory, org.apache.dubbo.config.spring.context.DubboSpringInitContext)}
+     * 中调用
+     * </p>
+     *
+     * @param beanFactory
+     * @param bean
+     */
     private static void registerSingleton(ConfigurableListableBeanFactory beanFactory, Object bean) {
         beanFactory.registerSingleton(bean.getClass().getName(), bean);
     }

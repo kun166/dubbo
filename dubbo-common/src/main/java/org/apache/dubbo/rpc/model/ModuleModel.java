@@ -52,6 +52,11 @@ public class ModuleModel extends ScopeModel {
     private volatile ModuleEnvironment moduleEnvironment;
     private volatile ModuleConfigManager moduleConfigManager;
     private volatile ModuleDeployer deployer;
+
+    /**
+     * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
+     * 中设置成了true
+     */
     private boolean lifeCycleManagedExternally = false;
 
     /**
@@ -236,6 +241,13 @@ public class ModuleModel extends ScopeModel {
         return lifeCycleManagedExternally;
     }
 
+
+    /**
+     * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
+     * 中设置为true
+     *
+     * @param lifeCycleManagedExternally
+     */
     public void setLifeCycleManagedExternally(boolean lifeCycleManagedExternally) {
         this.lifeCycleManagedExternally = lifeCycleManagedExternally;
     }

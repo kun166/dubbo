@@ -38,12 +38,25 @@ public class DubboSpringInitContext {
 
     private ApplicationContext applicationContext;
 
+    /**
+     * {@link DubboSpringInitContext#setModuleModel(org.apache.dubbo.rpc.model.ModuleModel)}中设置值
+     * 通过该值，可以获取{@link ApplicationModel}和{@link org.apache.dubbo.rpc.model.FrameworkModel}
+     */
     private ModuleModel moduleModel;
 
     private final Map<String, Object> moduleAttributes = new HashMap<>();
 
+
+    /**
+     * {@link DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
+     * 中设置为true
+     */
     private volatile boolean bound;
 
+    /**
+     * {@link DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
+     * 中调用
+     */
     public void markAsBound() {
         bound = true;
     }
@@ -83,6 +96,11 @@ public class DubboSpringInitContext {
     /**
      * Change the binding ModuleModel, the ModuleModel and DubboBootstrap must be matched.
      *
+     * <p>
+     * {@link DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
+     * 中调用
+     * </p>
+     *
      * @param moduleModel
      */
     public void setModuleModel(ModuleModel moduleModel) {
@@ -98,6 +116,7 @@ public class DubboSpringInitContext {
 
     /**
      * Keep Dubbo running when spring is stopped
+     *
      * @param keepRunningOnSpringClosed
      */
     public void setKeepRunningOnSpringClosed(boolean keepRunningOnSpringClosed) {
