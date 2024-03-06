@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc.model;
 
+import org.apache.dubbo.common.CommonScopeModelInitializer;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.config.ModuleEnvironment;
 import org.apache.dubbo.common.context.ModuleExt;
@@ -42,6 +43,10 @@ public class ModuleModel extends ScopeModel {
 
     public static final String NAME = "ModuleModel";
 
+    /**
+     * {@link ModuleModel#ModuleModel(org.apache.dubbo.rpc.model.ApplicationModel, boolean)}中赋值
+     * 传递的是创建本实例的{@link ApplicationModel}实例
+     */
     private final ApplicationModel applicationModel;
     private volatile ModuleServiceRepository serviceRepository;
     private volatile ModuleEnvironment moduleEnvironment;
@@ -49,10 +54,21 @@ public class ModuleModel extends ScopeModel {
     private volatile ModuleDeployer deployer;
     private boolean lifeCycleManagedExternally = false;
 
+    /**
+     * {@link ApplicationModel#newModule()}中调用
+     *
+     * @param applicationModel
+     */
     protected ModuleModel(ApplicationModel applicationModel) {
         this(applicationModel, false);
     }
 
+    /**
+     * {@link ModuleModel#ModuleModel(org.apache.dubbo.rpc.model.ApplicationModel)}中调用
+     *
+     * @param applicationModel
+     * @param isInternal
+     */
     protected ModuleModel(ApplicationModel applicationModel, boolean isInternal) {
         super(applicationModel, ExtensionScope.MODULE, isInternal);
         synchronized (instLock) {
@@ -70,7 +86,11 @@ public class ModuleModel extends ScopeModel {
             initModuleExt();
 
             ExtensionLoader<ScopeModelInitializer> initializerExtensionLoader =
-                    this.getExtensionLoader(ScopeModelInitializer.class);
+                this.getExtensionLoader(ScopeModelInitializer.class);
+            /**
+             * dubbo-common={@link org.apache.dubbo.common.CommonScopeModelInitializer}
+             * {@link CommonScopeModelInitializer#initializeModuleModel(org.apache.dubbo.rpc.model.ModuleModel)}
+             */
             Set<ScopeModelInitializer> initializers = initializerExtensionLoader.getSupportedExtensionInstances();
             for (ScopeModelInitializer initializer : initializers) {
                 initializer.initializeModuleModel(this);
@@ -154,7 +174,7 @@ public class ModuleModel extends ScopeModel {
     public ModuleEnvironment modelEnvironment() {
         if (moduleEnvironment == null) {
             moduleEnvironment =
-                    (ModuleEnvironment) this.getExtensionLoader(ModuleExt.class).getExtension(ModuleEnvironment.NAME);
+                (ModuleEnvironment) this.getExtensionLoader(ModuleExt.class).getExtension(ModuleEnvironment.NAME);
         }
         return moduleEnvironment;
     }
@@ -162,7 +182,7 @@ public class ModuleModel extends ScopeModel {
     public ModuleConfigManager getConfigManager() {
         if (moduleConfigManager == null) {
             moduleConfigManager = (ModuleConfigManager)
-                    this.getExtensionLoader(ModuleExt.class).getExtension(ModuleConfigManager.NAME);
+                this.getExtensionLoader(ModuleExt.class).getExtension(ModuleConfigManager.NAME);
         }
         return moduleConfigManager;
     }
@@ -199,13 +219,13 @@ public class ModuleModel extends ScopeModel {
         serviceMetadata.setServiceKey(serviceKey);
 
         ConsumerModel consumerModel = new ConsumerModel(
-                serviceMetadata.getServiceKey(),
-                "jdk",
-                serviceRepository.lookupService(serviceMetadata.getServiceInterfaceName()),
-                this,
-                serviceMetadata,
-                new HashMap<>(0),
-                ClassUtils.getClassLoader(internalService));
+            serviceMetadata.getServiceKey(),
+            "jdk",
+            serviceRepository.lookupService(serviceMetadata.getServiceInterfaceName()),
+            this,
+            serviceMetadata,
+            new HashMap<>(0),
+            ClassUtils.getClassLoader(internalService));
 
         logger.info("Dynamically registering consumer model " + serviceKey + " into model " + this.getDesc());
         serviceRepository.registerConsumer(consumerModel);

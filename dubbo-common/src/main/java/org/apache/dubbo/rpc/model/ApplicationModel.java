@@ -54,7 +54,16 @@ import java.util.concurrent.locks.Lock;
 public class ApplicationModel extends ScopeModel {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ApplicationModel.class);
     public static final String NAME = "ApplicationModel";
+
+    /**
+     * {@link ApplicationModel#addModule(org.apache.dubbo.rpc.model.ModuleModel, boolean)}中添加值
+     */
     private final List<ModuleModel> moduleModels = new CopyOnWriteArrayList<>();
+
+    /**
+     * {@link ApplicationModel#addModule(org.apache.dubbo.rpc.model.ModuleModel, boolean)}中添加值
+     * 当{@link ScopeModel#internalScope}为false的时候添加
+     */
     private final List<ModuleModel> pubModuleModels = new CopyOnWriteArrayList<>();
     private volatile Environment environment;
     private volatile ConfigManager configManager;
@@ -220,6 +229,11 @@ public class ApplicationModel extends ScopeModel {
         return frameworkModel;
     }
 
+    /**
+     * {@link ApplicationModel#getDefaultModule()}中调用
+     *
+     * @return
+     */
     public ModuleModel newModule() {
         synchronized (instLock) {
             return new ModuleModel(this);
@@ -269,6 +283,13 @@ public class ApplicationModel extends ScopeModel {
         return appCfgOptional.isPresent() ? appCfgOptional.get().getName() : null;
     }
 
+    /**
+     * {@link ModuleModel#ModuleModel(org.apache.dubbo.rpc.model.ApplicationModel, boolean)}
+     * 中调用
+     *
+     * @param moduleModel
+     * @param isInternal
+     */
     void addModule(ModuleModel moduleModel, boolean isInternal) {
         synchronized (instLock) {
             if (!this.moduleModels.contains(moduleModel)) {

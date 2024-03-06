@@ -63,6 +63,12 @@ public class CommonScopeModelInitializer implements ScopeModelInitializer {
         beanFactory.registerBean(new ConfigurationCache());
     }
 
+    /**
+     * {@link ModuleModel#ModuleModel(org.apache.dubbo.rpc.model.ApplicationModel, boolean)}
+     * 中调用
+     *
+     * @param moduleModel
+     */
     @Override
     public void initializeModuleModel(ModuleModel moduleModel) {
         ScopeBeanFactory beanFactory = moduleModel.getBeanFactory();

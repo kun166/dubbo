@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.common.beans.factory;
 
+import org.apache.dubbo.common.CommonScopeModelInitializer;
 import org.apache.dubbo.common.beans.ScopeBeanException;
 import org.apache.dubbo.common.beans.support.InstantiationStrategy;
 import org.apache.dubbo.common.extension.ExtensionAccessor;
@@ -86,6 +87,10 @@ public class ScopeBeanFactory {
         initInstantiationStrategy();
     }
 
+    /**
+     * {@link ScopeBeanFactory#ScopeBeanFactory(org.apache.dubbo.common.beans.factory.ScopeBeanFactory, org.apache.dubbo.common.extension.ExtensionAccessor)}
+     * 中调用
+     */
     private void initInstantiationStrategy() {
         for (ExtensionPostProcessor extensionPostProcessor : extensionPostProcessors) {
             if (extensionPostProcessor instanceof ScopeModelAccessor) {
@@ -98,6 +103,16 @@ public class ScopeBeanFactory {
         }
     }
 
+    /**
+     * <p>
+     * 在{@link CommonScopeModelInitializer}中调用
+     * </p>
+     *
+     * @param bean
+     * @param <T>
+     * @return
+     * @throws ScopeBeanException
+     */
     public <T> T registerBean(Class<T> bean) throws ScopeBeanException {
         return this.getOrRegisterBean(null, bean);
     }
@@ -106,6 +121,16 @@ public class ScopeBeanFactory {
         return getOrRegisterBean(name, clazz);
     }
 
+    /**
+     * <p>
+     * {@link ScopeBeanFactory#getOrRegisterBean(java.lang.String, java.lang.Class)}中调用
+     * </p>
+     *
+     * @param name
+     * @param clazz
+     * @param <T>
+     * @return
+     */
     private <T> T createAndRegisterBean(String name, Class<T> clazz) {
         checkDestroyed();
         T instance = getBean(name, clazz);
@@ -122,6 +147,13 @@ public class ScopeBeanFactory {
         return instance;
     }
 
+    /**
+     * <p>
+     * 在
+     * </p>
+     *
+     * @param bean
+     */
     public void registerBean(Object bean) {
         this.registerBean(null, bean);
     }
@@ -146,6 +178,16 @@ public class ScopeBeanFactory {
         return getOrRegisterBean(null, type);
     }
 
+    /**
+     * <p>
+     * 在{@link ScopeBeanFactory#registerBean(java.lang.Class)}中调用
+     * </p>
+     *
+     * @param name
+     * @param type
+     * @param <T>
+     * @return
+     */
     public <T> T getOrRegisterBean(String name, Class<T> type) {
         T bean = getBean(name, type);
         if (bean == null) {
@@ -228,6 +270,17 @@ public class ScopeBeanFactory {
         return this.getBean(null, type);
     }
 
+    /**
+     * <p>
+     * {@link ScopeBeanFactory#getOrRegisterBean(java.lang.String, java.lang.Class)}
+     * 中调用
+     * </p>
+     *
+     * @param name
+     * @param type
+     * @param <T>
+     * @return
+     */
     public <T> T getBean(String name, Class<T> type) {
         T bean = getBeanInternal(name, type);
         if (bean == null && parent != null) {
@@ -236,6 +289,16 @@ public class ScopeBeanFactory {
         return bean;
     }
 
+    /**
+     * <p>
+     * {@link ScopeBeanFactory#getBean(java.lang.String, java.lang.Class)}中调用
+     * </p>
+     *
+     * @param name
+     * @param type
+     * @param <T>
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private <T> T getBeanInternal(String name, Class<T> type) {
         checkDestroyed();

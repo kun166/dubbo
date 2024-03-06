@@ -106,6 +106,12 @@ public abstract class ScopeModel implements ExtensionAccessor {
      * scope      {@link ExtensionScope#APPLICATION}
      * isInternal 传的是false
      * </p>
+     * <p>
+     * {@link ModuleModel#ModuleModel(org.apache.dubbo.rpc.model.ApplicationModel, boolean)}中调用
+     * parent     {@link ApplicationModel}
+     * scope      {@link ExtensionScope#MODULE}
+     * isInternal 传的是false
+     * </p>
      *
      * @param parent
      * @param scope
@@ -126,7 +132,11 @@ public abstract class ScopeModel implements ExtensionAccessor {
      *  <li>在子类中,extensionDirector和beanFactory在initialize中可用，但在构造函数中不可用。</li>
      * </ol>
      * <p>
-     * {@link FrameworkModel#FrameworkModel()}中调用
+     * 在三个子类里
+     * {@link FrameworkModel}
+     * {@link ApplicationModel}
+     * {@link ModuleModel}
+     * 的构造函数里面均有调用
      * </p>
      */
     protected void initialize() {
