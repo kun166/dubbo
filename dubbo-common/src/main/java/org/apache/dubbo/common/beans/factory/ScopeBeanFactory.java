@@ -29,6 +29,8 @@ import org.apache.dubbo.common.utils.ConcurrentHashMapUtils;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelAccessor;
+import org.apache.dubbo.rpc.model.ScopeModelAware;
+import org.apache.dubbo.rpc.model.ScopeModelAwareExtensionProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,8 +67,18 @@ public class ScopeBeanFactory {
      * {@link org.apache.dubbo.rpc.model.ModuleModel}
      */
     private final ExtensionAccessor extensionAccessor;
+
+    /**
+     * 在{@link ScopeModel#initialize()}中添加
+     * {@link ScopeModelAwareExtensionProcessor}
+     */
     private final List<ExtensionPostProcessor> extensionPostProcessors;
     private final ConcurrentHashMap<Class<?>, AtomicInteger> beanNameIdCounterMap = new ConcurrentHashMap<>();
+
+    /**
+     * 在{@link ScopeBeanFactory#registerBean(java.lang.String, java.lang.Object)}中添加值
+     * 参考{@link CommonScopeModelInitializer}
+     */
     private final List<BeanInfo> registeredBeanInfos = new CopyOnWriteArrayList<>();
     private InstantiationStrategy instantiationStrategy;
     private final AtomicBoolean destroyed = new AtomicBoolean();
@@ -94,6 +106,10 @@ public class ScopeBeanFactory {
     private void initInstantiationStrategy() {
         for (ExtensionPostProcessor extensionPostProcessor : extensionPostProcessors) {
             if (extensionPostProcessor instanceof ScopeModelAccessor) {
+                /**
+                 * 在{@link ScopeModel#initialize()}中添加
+                 * {@link ScopeModelAwareExtensionProcessor}
+                 */
                 instantiationStrategy = new InstantiationStrategy((ScopeModelAccessor) extensionPostProcessor);
                 break;
             }
@@ -158,6 +174,14 @@ public class ScopeBeanFactory {
         this.registerBean(null, bean);
     }
 
+    /**
+     * <p>
+     * {@link ScopeBeanFactory#createAndRegisterBean(java.lang.String, java.lang.Class)}中调用
+     * </p>
+     *
+     * @param name
+     * @param bean
+     */
     public void registerBean(String name, Object bean) {
         checkDestroyed();
         // avoid duplicated register same bean
@@ -167,6 +191,8 @@ public class ScopeBeanFactory {
 
         Class<?> beanClass = bean.getClass();
         if (name == null) {
+            // 如果name为空，这个地方会生成一个
+            // 感觉两个线程调用过来，上面的判断拦不住
             name = beanClass.getName() + "#" + getNextId(beanClass);
         }
         initializeBean(name, bean);
@@ -223,6 +249,16 @@ public class ScopeBeanFactory {
         return bean;
     }
 
+    /**
+     * 判断bean是否实现了{@link ExtensionAccessorAware},{@link ScopeModelAware}接口，
+     * 如果是，则设置值
+     * <p>
+     * {@link ScopeBeanFactory#registerBean(java.lang.String, java.lang.Object)}中调用
+     * </p>
+     *
+     * @param name
+     * @param bean
+     */
     private void initializeBean(String name, Object bean) {
         checkDestroyed();
         try {
@@ -240,6 +276,16 @@ public class ScopeBeanFactory {
         }
     }
 
+    /**
+     * 判断{@link ScopeBeanFactory#registeredBeanInfos}中是否已经包含该bean
+     * <p>
+     * {@link ScopeBeanFactory#registerBean(java.lang.String, java.lang.Object)}中调用
+     * </p>
+     *
+     * @param name
+     * @param bean
+     * @return
+     */
     private boolean containsBean(String name, Object bean) {
         for (BeanInfo beanInfo : registeredBeanInfos) {
             if (beanInfo.instance == bean && (name == null || StringUtils.isEquals(name, beanInfo.name))) {

@@ -19,16 +19,41 @@ package org.apache.dubbo.rpc.model;
 import org.apache.dubbo.common.extension.ExtensionPostProcessor;
 
 public class ScopeModelAwareExtensionProcessor implements ExtensionPostProcessor, ScopeModelAccessor {
+
+    /**
+     * {@link ScopeModelAwareExtensionProcessor#ScopeModelAwareExtensionProcessor(org.apache.dubbo.rpc.model.ScopeModel)}
+     * 构造函数中赋值
+     * {@link FrameworkModel}
+     * {@link ApplicationModel}
+     * {@link ModuleModel}
+     */
     private ScopeModel scopeModel;
     private FrameworkModel frameworkModel;
     private ApplicationModel applicationModel;
     private ModuleModel moduleModel;
 
+    /**
+     * <p>
+     * {@link ScopeModel#initialize()}中调用
+     * </p>
+     *
+     * @param scopeModel
+     */
     public ScopeModelAwareExtensionProcessor(ScopeModel scopeModel) {
         this.scopeModel = scopeModel;
         initialize();
     }
 
+    /**
+     * 根据传入的{@link ScopeModelAwareExtensionProcessor#scopeModel}分别初始化
+     * {@link ScopeModelAwareExtensionProcessor#frameworkModel}
+     * {@link ScopeModelAwareExtensionProcessor#applicationModel}
+     * {@link ScopeModelAwareExtensionProcessor#moduleModel}
+     * <p>
+     * {@link ScopeModelAwareExtensionProcessor#ScopeModelAwareExtensionProcessor(org.apache.dubbo.rpc.model.ScopeModel)}
+     * 构造函数中调用
+     * </p>
+     */
     private void initialize() {
 
         // NOTE: Do not create a new model or use the default application/module model here!
@@ -44,6 +69,7 @@ public class ScopeModelAwareExtensionProcessor implements ExtensionPostProcessor
             applicationModel = (ApplicationModel) scopeModel;
             frameworkModel = applicationModel.getFrameworkModel();
         } else if (scopeModel instanceof ModuleModel) {
+            // 从这里可以看到，这三者有分层关系
             moduleModel = (ModuleModel) scopeModel;
             applicationModel = moduleModel.getApplicationModel();
             frameworkModel = applicationModel.getFrameworkModel();
