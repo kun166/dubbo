@@ -17,6 +17,7 @@
 package org.apache.dubbo.config;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.url.component.ServiceConfigURL;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.config.support.Parameter;
@@ -194,7 +195,8 @@ public class RegistryConfig extends AbstractConfig {
         this.secure = secure;
     }
 
-    public RegistryConfig() {}
+    public RegistryConfig() {
+    }
 
     public RegistryConfig(ApplicationModel applicationModel) {
         super(applicationModel);
@@ -243,9 +245,16 @@ public class RegistryConfig extends AbstractConfig {
         this.address = address;
         if (address != null) {
             try {
+                /**
+                 * 注意，下面这个{@link URL}是dubbo的,不是jdk的
+                 * 返回一个{@link ServiceConfigURL}
+                 */
                 URL url = URL.valueOf(address);
 
                 // Refactor since 2.7.8
+                /**
+                 * 设置username,password,protocol和port
+                 */
                 updatePropertyIfAbsent(this::getUsername, this::setUsername, url.getUsername());
                 updatePropertyIfAbsent(this::getPassword, this::setPassword, url.getPassword());
                 updatePropertyIfAbsent(this::getProtocol, this::setProtocol, url.getProtocol());
@@ -458,6 +467,13 @@ public class RegistryConfig extends AbstractConfig {
         this.parameters = parameters;
     }
 
+    /**
+     * <p>
+     * {@link RegistryConfig#setAddress(java.lang.String)}中调用
+     * </p>
+     *
+     * @param parameters
+     */
     public void updateParameters(Map<String, String> parameters) {
         if (CollectionUtils.isEmptyMap(parameters)) {
             return;

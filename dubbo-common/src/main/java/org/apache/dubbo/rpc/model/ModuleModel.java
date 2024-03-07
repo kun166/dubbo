@@ -51,6 +51,11 @@ public class ModuleModel extends ScopeModel {
     private volatile ModuleServiceRepository serviceRepository;
     private volatile ModuleEnvironment moduleEnvironment;
     private volatile ModuleConfigManager moduleConfigManager;
+
+    /**
+     * {@link org.apache.dubbo.config.ConfigScopeModelInitializer#initializeModuleModel(org.apache.dubbo.rpc.model.ModuleModel)}
+     * 中赋值
+     */
     private volatile ModuleDeployer deployer;
 
     /**
@@ -95,6 +100,21 @@ public class ModuleModel extends ScopeModel {
             /**
              * dubbo-common={@link org.apache.dubbo.common.CommonScopeModelInitializer}
              * {@link CommonScopeModelInitializer#initializeModuleModel(org.apache.dubbo.rpc.model.ModuleModel)}
+             * 如果是spring标签形式的，通过打断点，这个地方有如下14个：
+             * {@link org.apache.dubbo.security.cert.CertScopeModelInitializer}
+             * {@link org.apache.dubbo.rpc.cluster.ClusterScopeModelInitializer}
+             * {@link org.apache.dubbo.common.CommonScopeModelInitializer}
+             * {@link org.apache.dubbo.config.ConfigScopeModelInitializer}
+             * {@link org.apache.dubbo.config.spring.SpringScopeModelInitializer}
+             * {@link org.apache.dubbo.metadata.report.MetadataScopeModelInitializer}
+             * {@link org.apache.dubbo.metrics.MetricsScopeModelInitializer}
+             * {@link org.apache.dubbo.registry.RegistryScopeModelInitializer}
+             * {@link org.apache.dubbo.remoting.RemotingScopeModelInitializer}
+             * {@link org.apache.dubbo.common.serialize.fastjson2.Fastjson2ScopeModelInitializer}
+             * {@link org.apache.dubbo.common.serialize.hessian2.Hessian2ScopeModelInitializer}
+             * {@link org.apache.dubbo.qos.QosScopeModelInitializer}
+             * {@link org.apache.dubbo.rpc.RpcScopeModelInitializer}
+             * {@link org.apache.dubbo.rpc.cluster.router.xds.XdsScopeModelInitializer}
              */
             Set<ScopeModelInitializer> initializers = initializerExtensionLoader.getSupportedExtensionInstances();
             for (ScopeModelInitializer initializer : initializers) {
@@ -105,6 +125,10 @@ public class ModuleModel extends ScopeModel {
             Assert.assertTrue(getConfigManager().isInitialized(), "ModuleConfigManager can not be initialized");
 
             // notify application check state
+            /**
+             * {@link org.apache.dubbo.config.ConfigScopeModelInitializer#initializeApplicationModel(org.apache.dubbo.rpc.model.ApplicationModel)}
+             * 中设置
+             */
             ApplicationDeployer applicationDeployer = applicationModel.getDeployer();
             if (applicationDeployer != null) {
                 applicationDeployer.notifyModuleChanged(this, DeployState.PENDING);
@@ -184,6 +208,16 @@ public class ModuleModel extends ScopeModel {
         return moduleEnvironment;
     }
 
+    /**
+     * 通过拓展，获取{@link ModuleConfigManager}
+     * <p>
+     * {@link org.apache.dubbo.config.spring.ServiceBean#afterPropertiesSet()}中调用
+     * </p>
+     * moduleEnvironment={@link ModuleEnvironment}
+     * moduleConfig={@link ModuleConfigManager}
+     *
+     * @return
+     */
     public ModuleConfigManager getConfigManager() {
         if (moduleConfigManager == null) {
             moduleConfigManager = (ModuleConfigManager)
@@ -196,6 +230,12 @@ public class ModuleModel extends ScopeModel {
         return deployer;
     }
 
+    /**
+     * {@link org.apache.dubbo.config.ConfigScopeModelInitializer#initializeModuleModel(org.apache.dubbo.rpc.model.ModuleModel)}
+     * 中调用
+     *
+     * @param deployer
+     */
     public void setDeployer(ModuleDeployer deployer) {
         this.deployer = deployer;
     }

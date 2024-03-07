@@ -57,6 +57,13 @@ public class ApplicationModel extends ScopeModel {
 
     /**
      * {@link ApplicationModel#addModule(org.apache.dubbo.rpc.model.ModuleModel, boolean)}中添加值
+     * <p>
+     * 更进一步讲，只要是调用了{@link ModuleModel}构造函数就会添加到这里来。
+     * 1,在{@link ApplicationModel#ApplicationModel(org.apache.dubbo.rpc.model.FrameworkModel, boolean)}
+     * 中创建了一个{@link ScopeModel#internalScope}为true的{@link ModuleModel}
+     * 2,在{@link ApplicationModel#getDefaultModule()}
+     * 中创建了一个{@link ScopeModel#internalScope}为false的{@link ModuleModel}
+     * </p>
      */
     private final List<ModuleModel> moduleModels = new CopyOnWriteArrayList<>();
 
@@ -153,6 +160,21 @@ public class ApplicationModel extends ScopeModel {
             /**
              * dubbo-common={@link org.apache.dubbo.common.CommonScopeModelInitializer}
              * {@link CommonScopeModelInitializer#initializeApplicationModel(org.apache.dubbo.rpc.model.ApplicationModel)}
+             * 如果是spring标签形式的，通过打断点，这个地方有如下14个：
+             * {@link org.apache.dubbo.security.cert.CertScopeModelInitializer}
+             * {@link org.apache.dubbo.rpc.cluster.ClusterScopeModelInitializer}
+             * {@link org.apache.dubbo.common.CommonScopeModelInitializer}
+             * {@link org.apache.dubbo.config.ConfigScopeModelInitializer}
+             * {@link org.apache.dubbo.config.spring.SpringScopeModelInitializer}
+             * {@link org.apache.dubbo.metadata.report.MetadataScopeModelInitializer}
+             * {@link org.apache.dubbo.metrics.MetricsScopeModelInitializer}
+             * {@link org.apache.dubbo.registry.RegistryScopeModelInitializer}
+             * {@link org.apache.dubbo.remoting.RemotingScopeModelInitializer}
+             * {@link org.apache.dubbo.common.serialize.fastjson2.Fastjson2ScopeModelInitializer}
+             * {@link org.apache.dubbo.common.serialize.hessian2.Hessian2ScopeModelInitializer}
+             * {@link org.apache.dubbo.qos.QosScopeModelInitializer}
+             * {@link org.apache.dubbo.rpc.RpcScopeModelInitializer}
+             * {@link org.apache.dubbo.rpc.cluster.router.xds.XdsScopeModelInitializer}
              */
             Set<ScopeModelInitializer> initializers = initializerExtensionLoader.getSupportedExtensionInstances();
             for (ScopeModelInitializer initializer : initializers) {

@@ -64,13 +64,13 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
 
     public ModuleConfigManager(ModuleModel moduleModel) {
         super(
-                moduleModel,
-                Arrays.asList(
-                        ModuleConfig.class,
-                        ServiceConfigBase.class,
-                        ReferenceConfigBase.class,
-                        ProviderConfig.class,
-                        ConsumerConfig.class));
+            moduleModel,
+            Arrays.asList(
+                ModuleConfig.class,
+                ServiceConfigBase.class,
+                ReferenceConfigBase.class,
+                ProviderConfig.class,
+                ConsumerConfig.class));
         applicationConfigManager = moduleModel.getApplicationModel().getApplicationConfigManager();
     }
 
@@ -87,6 +87,11 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
 
     // ServiceConfig correlative methods
 
+    /**
+     * {@link org.apache.dubbo.config.spring.ServiceBean#afterPropertiesSet()}中调用
+     *
+     * @param serviceConfig
+     */
     public void addService(ServiceConfigBase<?> serviceConfig) {
         addConfig(serviceConfig);
     }
@@ -237,7 +242,7 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
             configCache = serviceConfigCache;
         } else {
             throw new IllegalArgumentException(
-                    "Illegal type of parameter 'config' : " + config.getClass().getName());
+                "Illegal type of parameter 'config' : " + config.getClass().getName());
         }
 
         AbstractInterfaceConfig prevConfig = configCache.putIfAbsent(uniqueServiceName, config);
@@ -256,9 +261,9 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
 
             String configType = config.getClass().getSimpleName();
             String msg = "Found multiple " + configType + "s with unique service name [" + uniqueServiceName
-                    + "], previous: " + prevConfig + ", later: " + config + ". " + "There can only be one instance of "
-                    + configType + " with the same triple (group, interface, version). "
-                    + "If multiple instances are required for the same interface, please use a different group or version.";
+                + "], previous: " + prevConfig + ", later: " + config + ". " + "There can only be one instance of "
+                + configType + " with the same triple (group, interface, version). "
+                + "If multiple instances are required for the same interface, please use a different group or version.";
 
             if (logger.isWarnEnabled() && duplicatedConfigs.add(config)) {
                 logger.warn(COMMON_UNEXPECTED_EXCEPTION, "", "", msg);
@@ -281,7 +286,7 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
             configCache = serviceConfigCache;
         } else {
             throw new IllegalArgumentException(
-                    "Illegal type of parameter 'config' : " + config.getClass().getName());
+                "Illegal type of parameter 'config' : " + config.getClass().getName());
         }
         configCache.remove(uniqueServiceName, config);
     }

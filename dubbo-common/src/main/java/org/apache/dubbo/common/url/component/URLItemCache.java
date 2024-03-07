@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.common.url.component;
 
+import org.apache.dubbo.common.URLStrParser;
 import org.apache.dubbo.common.utils.LRUCache;
 import org.apache.dubbo.common.utils.StringUtils;
 
@@ -28,7 +29,20 @@ public class URLItemCache {
     private static final Map<String, String> PATH_CACHE = new LRUCache<>(10000);
     private static final Map<String, String> REVISION_CACHE = new LRUCache<>(10000);
 
+    /**
+     * <p>
+     * {@link URLStrParser#addParam(java.lang.String, boolean, int, int, int, java.util.Map, org.apache.dubbo.common.URLStrParser.TempBuf)}
+     * 中调用
+     * </p>
+     *
+     * @param params
+     * @param key
+     * @param value
+     */
     public static void putParams(Map<String, String> params, String key, String value) {
+        /**
+         * 不是清楚这个缓存有啥用
+         */
         String cachedKey = PARAM_KEY_CACHE.get(key);
         if (StringUtils.isBlank(cachedKey)) {
             cachedKey = key;

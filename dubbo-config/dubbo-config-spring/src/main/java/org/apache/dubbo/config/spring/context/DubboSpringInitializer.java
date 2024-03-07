@@ -200,7 +200,9 @@ public class DubboSpringInitializer {
         moduleModel.setLifeCycleManagedExternally(true);
 
         // register common beans
-        // 下面逻辑很重要，有时间再看吧
+        /**
+         * 下面逻辑很重要，有时间再看吧
+         */
         DubboBeanUtils.registerCommonBeans(registry);
     }
 

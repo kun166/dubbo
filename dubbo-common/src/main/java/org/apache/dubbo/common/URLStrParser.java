@@ -42,6 +42,11 @@ public final class URLStrParser {
     }
 
     /**
+     * <p>
+     * {@link URL#valueOf(java.lang.String, boolean)}中调用
+     * </p>
+     * 返回一个{@link ServiceConfigURL}
+     *
      * @param decodedURLStr : after {@link URL#decode} string
      *                      decodedURLStr format: protocol://username:password@host:port/path?k1=v1&k2=v2
      *                      [protocol://][username:password@][host:port]/[path][?k1=v1&k2=v2]
@@ -59,21 +64,38 @@ public final class URLStrParser {
         return parseURLBody(decodedURLStr, decodedBody, parameters);
     }
 
+    /**
+     * 解析url中的参数
+     * <p>
+     * {@link URLStrParser#parseDecodedStr(java.lang.String)}中调用
+     * </p>
+     *
+     * @param str  url字符串
+     * @param from url中?的位置
+     * @return
+     */
     private static Map<String, String> parseDecodedParams(String str, int from) {
         int len = str.length();
         if (from >= len) {
+            // 说明没有参数
             return Collections.emptyMap();
         }
 
         TempBuf tempBuf = DECODE_TEMP_BUF.get();
+        // 返回对象
         Map<String, String> params = new HashMap<>();
+        // 记录参数开始的地方
         int nameStart = from;
+        // 记录value开始的地方
         int valueStart = -1;
         int i;
         for (i = from; i < len; i++) {
             char ch = str.charAt(i);
             switch (ch) {
                 case '=':
+                    /**
+                     * 找到=,则两边分别是key和value
+                     */
                     if (nameStart == i) {
                         nameStart = i + 1;
                     } else if (valueStart < nameStart) {
@@ -82,6 +104,9 @@ public final class URLStrParser {
                     break;
                 case ';':
                 case '&':
+                    /**
+                     * 碰到;或者&，说明一个新的key和value
+                     */
                     addParam(str, false, nameStart, valueStart, i, params, tempBuf);
                     nameStart = i + 1;
                     break;
@@ -94,10 +119,15 @@ public final class URLStrParser {
     }
 
     /**
-     * @param fullURLStr  : fullURLString
-     * @param decodedBody : format: [protocol://][username:password@][host:port]/[path]
-     * @param parameters  :
-     * @return URL
+     * <p>
+     * {@link URLStrParser#parseDecodedStr(java.lang.String)}中调用
+     * </p>
+     * <dubbo:registry id="registry1" address="zookeeper://127.0.0.1:2181?registry-type=service"/>
+     *
+     * @param fullURLStr  : fullURLString,url全部字符串
+     * @param decodedBody : format: [protocol://][username:password@][host:port]/[path] url参数之前的部分
+     * @param parameters  : 记录参数的map
+     * @return URL {@link ServiceConfigURL}
      */
     private static URL parseURLBody(String fullURLStr, String decodedBody, Map<String, String> parameters) {
         int starIdx = 0, endIdx = decodedBody.length();
@@ -107,6 +137,7 @@ public final class URLStrParser {
             endIdx = poundIndex;
         }
 
+        // 协议，如zookeeper
         String protocol = null;
         int protoEndIdx = decodedBody.indexOf("://");
         if (protoEndIdx >= 0) {
@@ -114,6 +145,7 @@ public final class URLStrParser {
                 throw new IllegalStateException("url missing protocol: \"" + fullURLStr + "\"");
             }
             protocol = decodedBody.substring(0, protoEndIdx);
+            // 将指针指向 "://" 之后
             starIdx = protoEndIdx + 3;
         } else {
             // case: file:/path/to/file.txt
@@ -130,10 +162,17 @@ public final class URLStrParser {
         String path = null;
         int pathStartIdx = indexOf(decodedBody, '/', starIdx, endIdx);
         if (pathStartIdx >= 0) {
+            /**
+             * 如:zookeeper://127.0.0.1:2181?registry-type=service
+             * 则pathStartIdx=-1
+             * 如:format: protocol://username:password@host:port/path?k1=v1&k2=v2
+             * 则有值
+             */
             path = decodedBody.substring(pathStartIdx + 1, endIdx);
             endIdx = pathStartIdx;
         }
 
+        // 解析username和password
         String username = null;
         String password = null;
         int pwdEndIdx = lastIndexOf(decodedBody, '@', starIdx, endIdx);
@@ -148,6 +187,7 @@ public final class URLStrParser {
             starIdx = pwdEndIdx + 1;
         }
 
+        // 解析host和port
         String host = null;
         int port = 0;
         int hostEndIdx = lastIndexOf(decodedBody, ':', starIdx, endIdx);
@@ -168,6 +208,7 @@ public final class URLStrParser {
         }
 
         // check cache
+        // 解析protocol
         protocol = URLItemCache.intern(protocol);
         path = URLItemCache.checkPath(path);
 
@@ -190,7 +231,7 @@ public final class URLStrParser {
             parts[0] = rawURLStr.substring(0, pathEndIdx);
             parts[1] = rawURLStr.substring(paramStartIdx);
         } else {
-            parts = new String[] {rawURLStr};
+            parts = new String[]{rawURLStr};
         }
         return parts;
     }
@@ -263,19 +304,39 @@ public final class URLStrParser {
         return params;
     }
 
-    private static boolean addParam(
-            String str,
-            boolean isEncoded,
-            int nameStart,
-            int valueStart,
-            int valueEnd,
-            Map<String, String> params,
-            TempBuf tempBuf) {
+    /**
+     * 解析url中，传入的参数位置的key和value,放到参数params中
+     * <p>
+     * {@link URLStrParser#parseDecodedParams(java.lang.String, int)}中调用
+     * </p>
+     *
+     * @param str        url字符串
+     * @param isEncoded  是否编码或者解码
+     * @param nameStart  url的参数开始坐标
+     * @param valueStart url的value开始坐标
+     * @param valueEnd   url的value结束坐标
+     * @param params     保存参数的map
+     * @param tempBuf
+     * @return
+     */
+    private static boolean addParam(String str,
+                                    boolean isEncoded,
+                                    int nameStart,
+                                    int valueStart,
+                                    int valueEnd,
+                                    Map<String, String> params,
+                                    TempBuf tempBuf) {
         if (nameStart >= valueEnd) {
+            /**
+             * 如果value的结束位置小于等于key的起始位置,返回
+             */
             return false;
         }
 
         if (valueStart <= nameStart) {
+            /**
+             * 如果value的起始位置小于name的其实位置，因为中间还有一个=,因此+1开始
+             */
             valueStart = valueEnd + 1;
         }
 
@@ -293,6 +354,7 @@ public final class URLStrParser {
                 params.putIfAbsent(name.substring(DEFAULT_KEY_PREFIX.length()), value);
             }
         } else {
+            // 不需要编解码
             String name = str.substring(nameStart, valueStart - 1);
             String value;
             if (valueStart >= valueEnd) {
@@ -303,6 +365,7 @@ public final class URLStrParser {
             URLItemCache.putParams(params, name, value);
             // compatible with lower versions registering "default." keys
             if (name.startsWith(DEFAULT_KEY_PREFIX)) {
+                // 如果key中以"default."起始，则截取后面的字符串为key，放到参数列表里
                 params.putIfAbsent(name.substring(DEFAULT_KEY_PREFIX.length()), value);
             }
         }
@@ -338,7 +401,7 @@ public final class URLStrParser {
     }
 
     private static String decodeUtf8Component(
-            String str, int firstEscaped, int toExcluded, boolean isPath, byte[] buf, char[] charBuf, int charBufIdx) {
+        String str, int firstEscaped, int toExcluded, boolean isPath, byte[] buf, char[] charBuf, int charBufIdx) {
         int bufIdx;
         for (int i = firstEscaped; i < toExcluded; i++) {
             char c = str.charAt(i);

@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.config.spring.util;
 
+import org.apache.dubbo.config.spring.ServiceBean;
 import org.apache.dubbo.config.spring.beans.factory.annotation.DubboConfigAliasPostProcessor;
 import org.apache.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor;
 import org.apache.dubbo.config.spring.beans.factory.annotation.ServicePackagesHolder;
@@ -77,6 +78,9 @@ public interface DubboBeanUtils {
         registerInfrastructureBean(registry, DubboConfigAliasPostProcessor.BEAN_NAME, DubboConfigAliasPostProcessor.class);
 
         // register ApplicationListeners
+        /**
+         * 下面两个{@link ApplicationListener}非常重要,其中{@link DubboDeployApplicationListener}是dubbo启动的关键
+         */
         registerInfrastructureBean(registry, DubboDeployApplicationListener.class.getName(), DubboDeployApplicationListener.class);
         registerInfrastructureBean(registry, DubboConfigApplicationListener.class.getName(), DubboConfigApplicationListener.class);
 
@@ -212,6 +216,15 @@ public interface DubboBeanUtils {
         return null;
     }
 
+    /**
+     * 从spring中获取{@link ModuleModel}
+     * <p>
+     * {@link ServiceBean#afterPropertiesSet()}中调用
+     * </p>
+     *
+     * @param beanFactory
+     * @return
+     */
     static ModuleModel getModuleModel(BeanFactory beanFactory) {
         String beanName = ModuleModel.class.getName();
         if (beanFactory != null && beanFactory.containsBean(beanName)) {

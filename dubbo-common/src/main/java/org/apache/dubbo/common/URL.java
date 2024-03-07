@@ -31,6 +31,7 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.LRUCache;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.FrameworkModel;
 import org.apache.dubbo.rpc.model.ModuleModel;
@@ -152,10 +153,10 @@ public /*final**/ class URL implements Serializable {
     }
 
     public URL(
-            String protocol,
-            String host,
-            int port,
-            String[] pairs) { // varargs ... conflict with the following path argument, use array instead.
+        String protocol,
+        String host,
+        int port,
+        String[] pairs) { // varargs ... conflict with the following path argument, use array instead.
         this(protocol, null, null, host, port, null, CollectionUtils.toStringMap(pairs));
     }
 
@@ -184,13 +185,13 @@ public /*final**/ class URL implements Serializable {
     }
 
     public URL(
-            String protocol,
-            String username,
-            String password,
-            String host,
-            int port,
-            String path,
-            Map<String, String> parameters) {
+        String protocol,
+        String username,
+        String password,
+        String host,
+        int port,
+        String path,
+        Map<String, String> parameters) {
         if (StringUtils.isEmpty(username) && StringUtils.isNotEmpty(password)) {
             throw new IllegalArgumentException("Invalid url, password without username!");
         }
@@ -201,14 +202,14 @@ public /*final**/ class URL implements Serializable {
     }
 
     protected URL(
-            String protocol,
-            String username,
-            String password,
-            String host,
-            int port,
-            String path,
-            Map<String, String> parameters,
-            boolean modifiable) {
+        String protocol,
+        String username,
+        String password,
+        String host,
+        int port,
+        String path,
+        Map<String, String> parameters,
+        boolean modifiable) {
         if (StringUtils.isEmpty(username) && StringUtils.isNotEmpty(password)) {
             throw new IllegalArgumentException("Invalid url, password without username!");
         }
@@ -230,9 +231,13 @@ public /*final**/ class URL implements Serializable {
 
     /**
      * parse decoded url string, formatted dubbo://host:port/path?param=value, into strutted URL.
+     * <dubbo:registry id="registry1" address="zookeeper://127.0.0.1:2181?registry-type=service"/>
+     * <p>
+     * {@link RegistryConfig#setAddress(java.lang.String)}中调用
+     * </p>
      *
      * @param url, decoded url string
-     * @return
+     * @return {@link ServiceConfigURL}
      */
     public static URL valueOf(String url) {
         return valueOf(url, false);
@@ -246,10 +251,13 @@ public /*final**/ class URL implements Serializable {
      * parse normal or encoded url string into strutted URL:
      * - dubbo://host:port/path?param=value
      * - URL.encode("dubbo://host:port/path?param=value")
+     * <p>
+     * {@link URL#valueOf(java.lang.String)}中调用
+     * </p>
      *
-     * @param url,     url string
-     * @param encoded, encoded or decoded
-     * @return
+     * @param url,     url string url的字符串
+     * @param encoded, encoded or decoded 编码或者解码
+     * @return {@link ServiceConfigURL}
      */
     public static URL valueOf(String url, boolean encoded) {
         if (encoded) {
@@ -296,24 +304,24 @@ public /*final**/ class URL implements Serializable {
             }
         }
         return newMap.isEmpty()
-                ? new ServiceConfigURL(
-                        url.getProtocol(),
-                        url.getUsername(),
-                        url.getPassword(),
-                        url.getHost(),
-                        url.getPort(),
-                        url.getPath(),
-                        (Map<String, String>) null,
-                        url.getAttributes())
-                : new ServiceConfigURL(
-                        url.getProtocol(),
-                        url.getUsername(),
-                        url.getPassword(),
-                        url.getHost(),
-                        url.getPort(),
-                        url.getPath(),
-                        newMap,
-                        url.getAttributes());
+            ? new ServiceConfigURL(
+            url.getProtocol(),
+            url.getUsername(),
+            url.getPassword(),
+            url.getHost(),
+            url.getPort(),
+            url.getPath(),
+            (Map<String, String>) null,
+            url.getAttributes())
+            : new ServiceConfigURL(
+            url.getProtocol(),
+            url.getUsername(),
+            url.getPassword(),
+            url.getHost(),
+            url.getPort(),
+            url.getPath(),
+            newMap,
+            url.getAttributes());
     }
 
     public static String encode(String value) {
@@ -378,7 +386,7 @@ public /*final**/ class URL implements Serializable {
     public URL setUsername(String username) {
         if (urlAddress == null) {
             return new ServiceConfigURL(getProtocol(), getHost(), getPort(), getPath(), getParameters())
-                    .setUsername(username);
+                .setUsername(username);
         } else {
             URLAddress newURLAddress = urlAddress.setUsername(username);
             return returnURL(newURLAddress);
@@ -392,7 +400,7 @@ public /*final**/ class URL implements Serializable {
     public URL setPassword(String password) {
         if (urlAddress == null) {
             return new ServiceConfigURL(getProtocol(), getHost(), getPort(), getPath(), getParameters())
-                    .setPassword(password);
+                .setPassword(password);
         } else {
             URLAddress newURLAddress = urlAddress.setPassword(password);
             return returnURL(newURLAddress);
@@ -647,9 +655,9 @@ public /*final**/ class URL implements Serializable {
         T result = null;
         if (!isBlank(value)) {
             result = getOrDefaultFrameworkModel()
-                    .getBeanFactory()
-                    .getBean(ConverterUtil.class)
-                    .convertIfPossible(value, valueType);
+                .getBeanFactory()
+                .getBean(ConverterUtil.class)
+                .convertIfPossible(value, valueType);
         }
         if (result == null) {
             result = defaultValue;
@@ -1178,7 +1186,7 @@ public /*final**/ class URL implements Serializable {
 
     public String toIdentityString(String... parameters) {
         return buildString(
-                true, false, parameters); // only return identity message, see the method "equals" and "hashCode"
+            true, false, parameters); // only return identity message, see the method "equals" and "hashCode"
     }
 
     public String toFullString() {
@@ -1226,7 +1234,7 @@ public /*final**/ class URL implements Serializable {
     }
 
     private String buildString(
-            boolean appendUser, boolean appendParameter, boolean useIP, boolean useService, String... parameters) {
+        boolean appendUser, boolean appendParameter, boolean useIP, boolean useService, String... parameters) {
         StringBuilder buf = new StringBuilder();
         if (StringUtils.isNotEmpty(getProtocol())) {
             buf.append(getProtocol());
@@ -1508,11 +1516,11 @@ public /*final**/ class URL implements Serializable {
         }
         URL other = (URL) obj;
         return Objects.equals(this.getUrlAddress(), other.getUrlAddress())
-                && Objects.equals(this.getUrlParam(), other.getUrlParam());
+            && Objects.equals(this.getUrlParam(), other.getUrlParam());
     }
 
     public static void putMethodParameter(
-            String method, String key, String value, Map<String, Map<String, String>> methodParameters) {
+        String method, String key, String value, Map<String, Map<String, String>> methodParameters) {
         Map<String, String> subParameter = methodParameters.computeIfAbsent(method, k -> new HashMap<>());
         subParameter.put(key, value);
     }

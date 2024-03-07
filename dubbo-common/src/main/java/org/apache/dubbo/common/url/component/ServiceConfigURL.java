@@ -17,6 +17,7 @@
 package org.apache.dubbo.common.url.component;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.URLStrParser;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.ConcurrentHashMapUtils;
 import org.apache.dubbo.common.utils.StringUtils;
@@ -49,10 +50,10 @@ public class ServiceConfigURL extends URL {
     }
 
     public ServiceConfigURL(
-            String protocol,
-            String host,
-            int port,
-            String[] pairs) { // varargs ... conflict with the following path argument, use array instead.
+        String protocol,
+        String host,
+        int port,
+        String[] pairs) { // varargs ... conflict with the following path argument, use array instead.
         this(protocol, null, null, host, port, null, CollectionUtils.toStringMap(pairs));
     }
 
@@ -77,34 +78,46 @@ public class ServiceConfigURL extends URL {
     }
 
     public ServiceConfigURL(
-            String protocol, String username, String password, String host, int port, String path, String... pairs) {
+        String protocol, String username, String password, String host, int port, String path, String... pairs) {
         this(protocol, username, password, host, port, path, CollectionUtils.toStringMap(pairs));
     }
 
-    public ServiceConfigURL(
-            String protocol,
-            String username,
-            String password,
-            String host,
-            int port,
-            String path,
-            Map<String, String> parameters) {
+    /**
+     * <p>
+     * {@link URLStrParser#parseURLBody(java.lang.String, java.lang.String, java.util.Map)}中调用
+     * </p>
+     *
+     * @param protocol
+     * @param username
+     * @param password
+     * @param host
+     * @param port
+     * @param path
+     * @param parameters
+     */
+    public ServiceConfigURL(String protocol,
+                            String username,
+                            String password,
+                            String host,
+                            int port,
+                            String path,
+                            Map<String, String> parameters) {
         this(new PathURLAddress(protocol, username, password, path, host, port), URLParam.parse(parameters), null);
     }
 
     public ServiceConfigURL(
-            String protocol,
-            String username,
-            String password,
-            String host,
-            int port,
-            String path,
-            Map<String, String> parameters,
-            Map<String, Object> attributes) {
+        String protocol,
+        String username,
+        String password,
+        String host,
+        int port,
+        String path,
+        Map<String, String> parameters,
+        Map<String, Object> attributes) {
         this(
-                new PathURLAddress(protocol, username, password, path, host, port),
-                URLParam.parse(parameters),
-                attributes);
+            new PathURLAddress(protocol, username, password, path, host, port),
+            URLParam.parse(parameters),
+            attributes);
     }
 
     @Override
@@ -560,7 +573,7 @@ public class ServiceConfigURL extends URL {
 
     private void updateCachedNumber(String method, String key, Number n) {
         Map<String, Number> keyNumber =
-                ConcurrentHashMapUtils.computeIfAbsent(getMethodNumbers(), method, m -> new HashMap<>());
+            ConcurrentHashMapUtils.computeIfAbsent(getMethodNumbers(), method, m -> new HashMap<>());
         keyNumber.put(key, n);
     }
 

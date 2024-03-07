@@ -40,6 +40,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.Ordered;
 
 import static org.apache.dubbo.common.constants.LoggerCodeConstants.CONFIG_FAILED_START_MODEL;
@@ -50,10 +51,10 @@ import static org.springframework.util.ObjectUtils.nullSafeEquals;
  * An ApplicationListener to control Dubbo application.
  */
 public class DubboDeployApplicationListener
-        implements ApplicationListener<ApplicationContextEvent>, ApplicationContextAware, Ordered {
+    implements ApplicationListener<ApplicationContextEvent>, ApplicationContextAware, Ordered {
 
     private static final ErrorTypeAwareLogger logger =
-            LoggerFactory.getErrorTypeAwareLogger(DubboDeployApplicationListener.class);
+        LoggerFactory.getErrorTypeAwareLogger(DubboDeployApplicationListener.class);
 
     private ApplicationContext applicationContext;
 
@@ -140,6 +141,10 @@ public class DubboDeployApplicationListener
     public void onApplicationEvent(ApplicationContextEvent event) {
         if (nullSafeEquals(applicationContext, event.getSource())) {
             if (event instanceof ContextRefreshedEvent) {
+                /**
+                 * 在{@link AbstractApplicationContext#refresh()}方法最后的
+                 * {@link AbstractApplicationContext#finishRefresh()}中发布了该事件
+                 */
                 onContextRefreshedEvent((ContextRefreshedEvent) event);
             } else if (event instanceof ContextClosedEvent) {
                 onContextClosedEvent((ContextClosedEvent) event);
@@ -147,6 +152,15 @@ public class DubboDeployApplicationListener
         }
     }
 
+    /**
+     * <p>
+     * {@link DubboDeployApplicationListener#onApplicationEvent(org.springframework.context.event.ApplicationContextEvent)}
+     * 中调用
+     * 此时{@link AbstractApplicationContext#refresh()}已经执行到了最后
+     * </p>
+     *
+     * @param event
+     */
     private void onContextRefreshedEvent(ContextRefreshedEvent event) {
         ModuleDeployer deployer = moduleModel.getDeployer();
         Assert.notNull(deployer, "Module deployer is null");
@@ -163,17 +177,17 @@ public class DubboDeployApplicationListener
                 future.get();
             } catch (InterruptedException e) {
                 logger.warn(
-                        CONFIG_FAILED_START_MODEL,
-                        "",
-                        "",
-                        "Interrupted while waiting for dubbo module start: " + e.getMessage());
+                    CONFIG_FAILED_START_MODEL,
+                    "",
+                    "",
+                    "Interrupted while waiting for dubbo module start: " + e.getMessage());
             } catch (Exception e) {
                 logger.warn(
-                        CONFIG_FAILED_START_MODEL,
-                        "",
-                        "",
-                        "An error occurred while waiting for dubbo module start: " + e.getMessage(),
-                        e);
+                    CONFIG_FAILED_START_MODEL,
+                    "",
+                    "",
+                    "An error occurred while waiting for dubbo module start: " + e.getMessage(),
+                    e);
             }
         }
     }
@@ -190,11 +204,11 @@ public class DubboDeployApplicationListener
             }
         } catch (Exception e) {
             logger.error(
-                    CONFIG_STOP_DUBBO_ERROR,
-                    "",
-                    "",
-                    "Unexpected error occurred when stop dubbo module: " + e.getMessage(),
-                    e);
+                CONFIG_STOP_DUBBO_ERROR,
+                "",
+                "",
+                "Unexpected error occurred when stop dubbo module: " + e.getMessage(),
+                e);
         }
         // remove context bind cache
         DubboSpringInitializer.remove(event.getApplicationContext());

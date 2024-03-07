@@ -41,6 +41,10 @@ public abstract class AbstractDeployer<E extends ScopeModel> implements Deployer
 
     protected volatile boolean initialized = false;
 
+    /**
+     * {@link org.apache.dubbo.config.spring.context.DubboDeployApplicationListener#setApplicationContext}
+     * 中有赋值
+     */
     protected List<DeployListener<E>> listeners = new CopyOnWriteArrayList<>();
 
     private E scopeModel;
@@ -110,11 +114,11 @@ public abstract class AbstractDeployer<E extends ScopeModel> implements Deployer
                 listener.onStarting(scopeModel);
             } catch (Throwable e) {
                 logger.error(
-                        COMMON_MONITOR_EXCEPTION,
-                        "",
-                        "",
-                        getIdentifier() + " an exception occurred when handle starting event",
-                        e);
+                    COMMON_MONITOR_EXCEPTION,
+                    "",
+                    "",
+                    getIdentifier() + " an exception occurred when handle starting event",
+                    e);
             }
         }
     }
@@ -126,11 +130,11 @@ public abstract class AbstractDeployer<E extends ScopeModel> implements Deployer
                 listener.onStarted(scopeModel);
             } catch (Throwable e) {
                 logger.error(
-                        COMMON_MONITOR_EXCEPTION,
-                        "",
-                        "",
-                        getIdentifier() + " an exception occurred when handle started event",
-                        e);
+                    COMMON_MONITOR_EXCEPTION,
+                    "",
+                    "",
+                    getIdentifier() + " an exception occurred when handle started event",
+                    e);
             }
         }
     }
@@ -142,11 +146,11 @@ public abstract class AbstractDeployer<E extends ScopeModel> implements Deployer
                 listener.onStopping(scopeModel);
             } catch (Throwable e) {
                 logger.error(
-                        COMMON_MONITOR_EXCEPTION,
-                        "",
-                        "",
-                        getIdentifier() + " an exception occurred when handle stopping event",
-                        e);
+                    COMMON_MONITOR_EXCEPTION,
+                    "",
+                    "",
+                    getIdentifier() + " an exception occurred when handle stopping event",
+                    e);
             }
         }
     }
@@ -158,11 +162,11 @@ public abstract class AbstractDeployer<E extends ScopeModel> implements Deployer
                 listener.onStopped(scopeModel);
             } catch (Throwable e) {
                 logger.error(
-                        COMMON_MONITOR_EXCEPTION,
-                        "",
-                        "",
-                        getIdentifier() + " an exception occurred when handle stopped event",
-                        e);
+                    COMMON_MONITOR_EXCEPTION,
+                    "",
+                    "",
+                    getIdentifier() + " an exception occurred when handle stopped event",
+                    e);
             }
         }
     }
@@ -175,11 +179,11 @@ public abstract class AbstractDeployer<E extends ScopeModel> implements Deployer
                 listener.onFailure(scopeModel, error);
             } catch (Throwable e) {
                 logger.error(
-                        COMMON_MONITOR_EXCEPTION,
-                        "",
-                        "",
-                        getIdentifier() + " an exception occurred when handle failed event",
-                        e);
+                    COMMON_MONITOR_EXCEPTION,
+                    "",
+                    "",
+                    getIdentifier() + " an exception occurred when handle failed event",
+                    e);
             }
         }
     }
