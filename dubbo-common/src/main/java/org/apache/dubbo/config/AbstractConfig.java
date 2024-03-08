@@ -772,12 +772,11 @@ public abstract class AbstractConfig implements Serializable {
         processExtraRefresh(preferredPrefix, subPropsConfiguration);
     }
 
-    private void assignProperties(
-        Object obj,
-        Environment environment,
-        Map<String, String> properties,
-        InmemoryConfiguration configuration,
-        ConfigMode configMode) {
+    private void assignProperties(Object obj,
+                                  Environment environment,
+                                  Map<String, String> properties,
+                                  InmemoryConfiguration configuration,
+                                  ConfigMode configMode) {
         // if old one (this) contains non-null value, do not override
         boolean overrideIfAbsent = configMode == ConfigMode.OVERRIDE_IF_ABSENT;
 

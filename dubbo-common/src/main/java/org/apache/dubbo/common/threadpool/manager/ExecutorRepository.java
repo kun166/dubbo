@@ -17,6 +17,7 @@
 package org.apache.dubbo.common.threadpool.manager;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.extension.ExtensionScope;
 import org.apache.dubbo.common.extension.SPI;
@@ -90,29 +91,29 @@ public interface ExecutorRepository {
      * Returns a scheduler from the scheduler list, call this method whenever you need a scheduler for a cron job.
      * If your cron cannot burden the possible schedule delay caused by sharing the same scheduler, please consider define a dedicate one.
      *
-     * @deprecated use {@link FrameworkExecutorRepository#nextScheduledExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#nextScheduledExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService nextScheduledExecutor();
 
     /**
-     * @deprecated use {@link FrameworkExecutorRepository#nextExecutorExecutor()} instead
      * @return ExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#nextExecutorExecutor()} instead
      */
     @Deprecated
     ExecutorService nextExecutorExecutor();
 
     /**
-     * @deprecated use {@link FrameworkExecutorRepository#getServiceDiscoveryAddressNotificationExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getServiceDiscoveryAddressNotificationExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getServiceDiscoveryAddressNotificationExecutor();
 
     /**
-     * @deprecated use {@link FrameworkExecutorRepository#getMetadataRetryExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getMetadataRetryExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getMetadataRetryExecutor();
@@ -120,8 +121,8 @@ public interface ExecutorRepository {
     /**
      * Scheduled executor handle registry notification.
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getRegistryNotificationExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getRegistryNotificationExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getRegistryNotificationExecutor();
@@ -129,8 +130,8 @@ public interface ExecutorRepository {
     /**
      * Get the default shared threadpool.
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getSharedExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getSharedExecutor()} instead
      */
     @Deprecated
     ExecutorService getSharedExecutor();
@@ -138,15 +139,15 @@ public interface ExecutorRepository {
     /**
      * Get the shared schedule executor
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getSharedScheduledExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getSharedScheduledExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getSharedScheduledExecutor();
 
     /**
-     * @deprecated use {@link FrameworkExecutorRepository#getPoolRouterExecutor()} instead
      * @return ExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getPoolRouterExecutor()} instead
      */
     @Deprecated
     ExecutorService getPoolRouterExecutor();
@@ -154,8 +155,8 @@ public interface ExecutorRepository {
     /**
      * Scheduled executor handle connectivity check task
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getConnectivityScheduledExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getConnectivityScheduledExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getConnectivityScheduledExecutor();
@@ -163,8 +164,8 @@ public interface ExecutorRepository {
     /**
      * Scheduler used to refresh file based caches from memory to disk.
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getCacheRefreshingScheduledExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getCacheRefreshingScheduledExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getCacheRefreshingScheduledExecutor();
@@ -172,26 +173,48 @@ public interface ExecutorRepository {
     /**
      * Executor used to run async mapping tasks
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getMappingRefreshingExecutor()} instead
      * @return ExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getMappingRefreshingExecutor()} instead
      */
     @Deprecated
     ExecutorService getMappingRefreshingExecutor();
 
     ExecutorSupport getExecutorSupport(URL url);
 
+    /**
+     * 大概率返回{@link IsolationExecutorRepository}
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultModuleDeployer#DefaultModuleDeployer(org.apache.dubbo.rpc.model.ModuleModel)}
+     * 中调用
+     * </p>
+     *
+     * @param applicationModel
+     * @return
+     */
     static ExecutorRepository getInstance(ApplicationModel applicationModel) {
         ExtensionLoader<ExecutorRepository> extensionLoader =
-                applicationModel.getExtensionLoader(ExecutorRepository.class);
+            applicationModel.getExtensionLoader(ExecutorRepository.class);
+        /**
+         * {@link CommonConstants#EXECUTOR_MANAGEMENT_MODE_ISOLATION}
+         */
         String mode = getMode(applicationModel);
         return StringUtils.isNotEmpty(mode)
-                ? extensionLoader.getExtension(mode)
-                : extensionLoader.getDefaultExtension();
+            ? extensionLoader.getExtension(mode)
+            : extensionLoader.getDefaultExtension();
     }
 
+    /**
+     * 如果没有配置，返回{@link CommonConstants#EXECUTOR_MANAGEMENT_MODE_ISOLATION}
+     * <p>
+     * {@link ExecutorRepository#getInstance(org.apache.dubbo.rpc.model.ApplicationModel)}中调用
+     * </p>
+     *
+     * @param applicationModel
+     * @return
+     */
     static String getMode(ApplicationModel applicationModel) {
         Optional<ApplicationConfig> optional =
-                applicationModel.getApplicationConfigManager().getApplication();
+            applicationModel.getApplicationConfigManager().getApplication();
         return optional.map(ApplicationConfig::getExecutorManagementMode).orElse(EXECUTOR_MANAGEMENT_MODE_ISOLATION);
     }
 }

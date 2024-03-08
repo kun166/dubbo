@@ -118,6 +118,10 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
 
     private final ConfigManager configManager;
 
+    /**
+     * {@link Environment}
+     * 构造函数中添加
+     */
     private final Environment environment;
 
     private final ReferenceCache referenceCache;
@@ -201,10 +205,14 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
 
     /**
      * Initialize
+     * <p>
+     * {@link DefaultModuleDeployer#start()}中调用
+     * </p>
      */
     @Override
     public void initialize() {
         if (initialized) {
+            // 只执行一次
             return;
         }
         // Ensure that the initialization is completed when concurrent calls
@@ -238,10 +246,20 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#initialize()}中调用
+     * </p>
+     */
     private void registerShutdownHook() {
         dubboShutdownHook.register();
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#initialize()}调用
+     * </p>
+     */
     private void initModuleDeployers() {
         // make sure created default module
         applicationModel.getDefaultModule();
@@ -251,13 +269,28 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#initialize()}中调用
+     * </p>
+     */
     private void loadApplicationConfigs() {
         configManager.loadConfigs();
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#initialize()}中调用
+     * </p>
+     */
     private void startConfigCenter() {
 
         // load application config
+        /**
+         * 加载{@link ApplicationConfig}
+         * 如果没有主动声明，就加载一个
+         * 例如:<dubbo:application name="demo-provider" >
+         */
         configManager.loadConfigsOfTypeFromProps(ApplicationConfig.class);
 
         // try set model name
@@ -266,6 +299,11 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
 
         // load config centers
+        /**
+         * 加载{@link ConfigCenterConfig}
+         * 如果没有主动声明，就加载一个
+         * 例如：<dubbo:config-center address="zookeeper://127.0.0.1:2181"/>
+         */
         configManager.loadConfigsOfTypeFromProps(ConfigCenterConfig.class);
 
         useRegistryAsConfigCenterIfNecessary();
@@ -302,6 +340,11 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#initialize()}调用
+     * </p>
+     */
     private void startMetadataCenter() {
 
         useRegistryAsMetadataCenterIfNecessary();
@@ -339,9 +382,14 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
      * For compatibility purpose, use registry as the default config center when
      * there's no config center specified explicitly and
      * useAsConfigCenter of registryConfig is null or true
+     * 出于兼容性目的，当没有明确指定配置中心，并且registryConfig的useAsConfigCenter为null或true
+     * <p>
+     * {@link DefaultApplicationDeployer#startConfigCenter()}中调用
+     * </p>
      */
     private void useRegistryAsConfigCenterIfNecessary() {
         // we use the loading status of DynamicConfiguration to decide whether ConfigCenter has been initiated.
+        // 我们使用DynamicConfiguration的加载状态来决定ConfigCenter是否已经启动。
         if (environment.getDynamicConfiguration().isPresent()) {
             return;
         }
@@ -368,12 +416,22 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#initialize()}调用
+     * </p>
+     */
     private void initMetricsService() {
         this.metricsServiceExporter =
             getExtensionLoader(MetricsServiceExporter.class).getDefaultExtension();
         metricsServiceExporter.init();
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#initialize()}调用
+     * </p>
+     */
     private void initMetricsReporter() {
         if (!isSupportMetrics()) {
             return;
@@ -1263,6 +1321,11 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         return newState;
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#initialize()}中调用
+     * </p>
+     */
     private void onInitialize() {
         for (DeployListener<ApplicationModel> listener : listeners) {
             try {

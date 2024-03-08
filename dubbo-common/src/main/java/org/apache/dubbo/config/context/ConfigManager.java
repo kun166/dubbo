@@ -20,6 +20,7 @@ import org.apache.dubbo.common.context.ApplicationExt;
 import org.apache.dubbo.common.extension.DisableInject;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.common.threadpool.manager.ExecutorRepository;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.config.AbstractConfig;
@@ -59,17 +60,17 @@ public class ConfigManager extends AbstractConfigManager implements ApplicationE
 
     public ConfigManager(ApplicationModel applicationModel) {
         super(
-                applicationModel,
-                Arrays.asList(
-                        ApplicationConfig.class,
-                        MonitorConfig.class,
-                        MetricsConfig.class,
-                        SslConfig.class,
-                        ProtocolConfig.class,
-                        RegistryConfig.class,
-                        ConfigCenterConfig.class,
-                        MetadataReportConfig.class,
-                        TracingConfig.class));
+            applicationModel,
+            Arrays.asList(
+                ApplicationConfig.class,
+                MonitorConfig.class,
+                MetricsConfig.class,
+                SslConfig.class,
+                ProtocolConfig.class,
+                RegistryConfig.class,
+                ConfigCenterConfig.class,
+                MetadataReportConfig.class,
+                TracingConfig.class));
     }
 
     // ApplicationConfig correlative methods
@@ -85,6 +86,13 @@ public class ConfigManager extends AbstractConfigManager implements ApplicationE
         addConfig(application);
     }
 
+    /**
+     * <p>
+     * {@link ExecutorRepository#getMode(org.apache.dubbo.rpc.model.ApplicationModel)}中调用
+     * </p>
+     *
+     * @return
+     */
     public Optional<ApplicationConfig> getApplication() {
         return ofNullable(getSingleConfig(getTagName(ApplicationConfig.class)));
     }
@@ -143,7 +151,7 @@ public class ConfigManager extends AbstractConfigManager implements ApplicationE
 
     public Optional<Collection<ConfigCenterConfig>> getDefaultConfigCenter() {
         Collection<ConfigCenterConfig> defaults =
-                getDefaultConfigs(getConfigsMap(getTagName(ConfigCenterConfig.class)));
+            getDefaultConfigs(getConfigsMap(getTagName(ConfigCenterConfig.class)));
         if (CollectionUtils.isEmpty(defaults)) {
             defaults = getConfigCenters();
         }
@@ -174,7 +182,7 @@ public class ConfigManager extends AbstractConfigManager implements ApplicationE
 
     public Collection<MetadataReportConfig> getDefaultMetadataConfigs() {
         Collection<MetadataReportConfig> defaults =
-                getDefaultConfigs(getConfigsMap(getTagName(MetadataReportConfig.class)));
+            getDefaultConfigs(getConfigsMap(getTagName(MetadataReportConfig.class)));
         if (CollectionUtils.isEmpty(defaults)) {
             return getMetadataConfigs();
         }
@@ -249,6 +257,12 @@ public class ConfigManager extends AbstractConfigManager implements ApplicationE
         getMetadataConfigs().forEach(MetadataReportConfig::refresh);
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#loadApplicationConfigs()}
+     * 中调用
+     * </p>
+     */
     @Override
     public void loadConfigs() {
         // application config has load before starting config center
@@ -290,13 +304,13 @@ public class ConfigManager extends AbstractConfigManager implements ApplicationE
     private void checkConfigs() {
         // check config types (ignore metadata-center)
         List<Class<? extends AbstractConfig>> multipleConfigTypes = Arrays.asList(
-                ApplicationConfig.class,
-                ProtocolConfig.class,
-                RegistryConfig.class,
-                MonitorConfig.class,
-                MetricsConfig.class,
-                TracingConfig.class,
-                SslConfig.class);
+            ApplicationConfig.class,
+            ProtocolConfig.class,
+            RegistryConfig.class,
+            MonitorConfig.class,
+            MetricsConfig.class,
+            TracingConfig.class,
+            SslConfig.class);
 
         for (Class<? extends AbstractConfig> configType : multipleConfigTypes) {
             checkDefaultAndValidateConfigs(configType);
@@ -312,7 +326,7 @@ public class ConfigManager extends AbstractConfigManager implements ApplicationE
             ProtocolConfig prevProtocol = protocolPortMap.get(port);
             if (prevProtocol != null) {
                 throw new IllegalStateException("Duplicated port used by protocol configs, port: " + port
-                        + ", configs: " + Arrays.asList(prevProtocol, protocol));
+                    + ", configs: " + Arrays.asList(prevProtocol, protocol));
             }
             protocolPortMap.put(port, protocol);
         }

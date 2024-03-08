@@ -580,6 +580,15 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
 
     public abstract void loadConfigs();
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#startConfigCenter()}中调用
+     * </p>
+     *
+     * @param cls
+     * @param <T>
+     * @return
+     */
     public <T extends AbstractConfig> List<T> loadConfigsOfTypeFromProps(Class<T> cls) {
         List<T> tmpConfigs = new ArrayList<>();
         PropertiesConfiguration properties = environment.getPropertiesConfiguration();

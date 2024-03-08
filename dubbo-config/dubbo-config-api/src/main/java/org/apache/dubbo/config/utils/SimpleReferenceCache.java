@@ -24,6 +24,7 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.ConcurrentHashMapUtils;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.config.ReferenceConfigBase;
+import org.apache.dubbo.config.deploy.DefaultModuleDeployer;
 import org.apache.dubbo.rpc.service.Destroyable;
 
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ import static org.apache.dubbo.common.constants.LoggerCodeConstants.CONFIG_API_W
  */
 public class SimpleReferenceCache implements ReferenceCache {
     private static final ErrorTypeAwareLogger logger =
-            LoggerFactory.getErrorTypeAwareLogger(SimpleReferenceCache.class);
+        LoggerFactory.getErrorTypeAwareLogger(SimpleReferenceCache.class);
     public static final String DEFAULT_NAME = "_DEFAULT_";
     /**
      * Create the key with the <b>Group</b>, <b>Interface</b> and <b>version</b> attribute of {@link ReferenceConfigBase}.
@@ -89,6 +90,13 @@ public class SimpleReferenceCache implements ReferenceCache {
         return getCache(DEFAULT_NAME);
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#DefaultModuleDeployer(org.apache.dubbo.rpc.model.ModuleModel)}中调用
+     * </p>
+     *
+     * @return
+     */
     public static SimpleReferenceCache newCache() {
         return getCache(DEFAULT_NAME + "#" + nameIndex.incrementAndGet());
     }
@@ -107,7 +115,7 @@ public class SimpleReferenceCache implements ReferenceCache {
      */
     public static SimpleReferenceCache getCache(String name, KeyGenerator keyGenerator) {
         return ConcurrentHashMapUtils.computeIfAbsent(
-                CACHE_HOLDER, name, k -> new SimpleReferenceCache(k, keyGenerator));
+            CACHE_HOLDER, name, k -> new SimpleReferenceCache(k, keyGenerator));
     }
 
     @Override
@@ -123,19 +131,19 @@ public class SimpleReferenceCache implements ReferenceCache {
             proxy = get(key, (Class<T>) type);
         } else {
             logger.warn(
-                    CONFIG_API_WRONG_USE,
-                    "",
-                    "",
-                    "Using non-singleton ReferenceConfig and ReferenceCache at the same time may cause memory leak. "
-                            + "Call ReferenceConfig#get() directly for non-singleton ReferenceConfig instead of using ReferenceCache#get(ReferenceConfig)");
+                CONFIG_API_WRONG_USE,
+                "",
+                "",
+                "Using non-singleton ReferenceConfig and ReferenceCache at the same time may cause memory leak. "
+                    + "Call ReferenceConfig#get() directly for non-singleton ReferenceConfig instead of using ReferenceCache#get(ReferenceConfig)");
         }
 
         if (proxy == null) {
             List<ReferenceConfigBase<?>> referencesOfType = ConcurrentHashMapUtils.computeIfAbsent(
-                    referenceTypeMap, type, _t -> Collections.synchronizedList(new ArrayList<>()));
+                referenceTypeMap, type, _t -> Collections.synchronizedList(new ArrayList<>()));
             referencesOfType.add(rc);
             List<ReferenceConfigBase<?>> referenceConfigList = ConcurrentHashMapUtils.computeIfAbsent(
-                    referenceKeyMap, key, _k -> Collections.synchronizedList(new ArrayList<>()));
+                referenceKeyMap, key, _k -> Collections.synchronizedList(new ArrayList<>()));
             referenceConfigList.add(rc);
             proxy = rc.get(check);
         }

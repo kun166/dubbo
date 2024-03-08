@@ -339,6 +339,14 @@ public abstract class ScopeModel implements ExtensionAccessor {
         return modelName;
     }
 
+    /**
+     * <p>
+     * {@link ApplicationModel}
+     * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#startConfigCenter()}中设置
+     * </p>
+     *
+     * @param modelName
+     */
     public void setModelName(String modelName) {
         this.modelName = modelName;
         this.desc = buildDesc();

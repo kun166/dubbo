@@ -72,6 +72,11 @@ public class ApplicationModel extends ScopeModel {
      * 当{@link ScopeModel#internalScope}为false的时候添加
      */
     private final List<ModuleModel> pubModuleModels = new CopyOnWriteArrayList<>();
+
+    /**
+     * {@link Environment}
+     * {@link ApplicationModel#modelEnvironment()}中赋值
+     */
     private volatile Environment environment;
     private volatile ConfigManager configManager;
     private volatile ServiceRepository serviceRepository;
@@ -262,9 +267,21 @@ public class ApplicationModel extends ScopeModel {
         }
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#DefaultApplicationDeployer(org.apache.dubbo.rpc.model.ApplicationModel)}
+     * 中调用
+     * </p>
+     *
+     * @return
+     */
     @Override
     public Environment modelEnvironment() {
         if (environment == null) {
+            /**
+             * config=org.apache.dubbo.config.context.ConfigManager
+             * environment=org.apache.dubbo.common.config.Environment
+             */
             environment =
                 (Environment) this.getExtensionLoader(ApplicationExt.class).getExtension(Environment.NAME);
         }
@@ -299,6 +316,13 @@ public class ApplicationModel extends ScopeModel {
         return getCurrentConfig().getName();
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#startConfigCenter()}中调用
+     * </p>
+     *
+     * @return
+     */
     public String tryGetApplicationName() {
         Optional<ApplicationConfig> appCfgOptional =
             getApplicationConfigManager().getApplication();

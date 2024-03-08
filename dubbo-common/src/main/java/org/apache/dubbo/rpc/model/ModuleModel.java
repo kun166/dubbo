@@ -212,6 +212,7 @@ public class ModuleModel extends ScopeModel {
      * 通过拓展，获取{@link ModuleConfigManager}
      * <p>
      * {@link org.apache.dubbo.config.spring.ServiceBean#afterPropertiesSet()}中调用
+     * {@link org.apache.dubbo.config.deploy.DefaultModuleDeployer#DefaultModuleDeployer(org.apache.dubbo.rpc.model.ModuleModel)}中调用
      * </p>
      * moduleEnvironment={@link ModuleEnvironment}
      * moduleConfig={@link ModuleConfigManager}
