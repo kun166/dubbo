@@ -107,6 +107,11 @@ public abstract class AbstractDeployer<E extends ScopeModel> implements Deployer
         this.state = PENDING;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultModuleDeployer#onModuleStarting()}中调用
+     * </p>
+     */
     protected void setStarting() {
         this.state = STARTING;
         for (DeployListener<E> listener : listeners) {

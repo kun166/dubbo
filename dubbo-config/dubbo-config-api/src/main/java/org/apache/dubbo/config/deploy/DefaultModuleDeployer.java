@@ -146,6 +146,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
     /**
      * <p>
      * {@link DefaultApplicationDeployer#initModuleDeployers()}中调用
+     * {@link DefaultModuleDeployer#startSync()}中调用
      * </p>
      *
      * @throws IllegalStateException
@@ -410,10 +411,18 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#startSync()}中调用
+     * </p>
+     */
     private void onModuleStarting() {
         setStarting();
         startFuture = new CompletableFuture();
         logger.info(getIdentifier() + " is starting.");
+        /**
+         * 下面这个方法非常重要
+         */
         applicationDeployer.notifyModuleChanged(moduleModel, DeployState.STARTING);
     }
 
@@ -485,6 +494,11 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
         moduleModel.getConfigManager().refreshAll();
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#startSync()}中调用
+     * </p>
+     */
     private void exportServices() {
         for (ServiceConfigBase sc : configManager.getServices()) {
             exportServiceInternal(sc);

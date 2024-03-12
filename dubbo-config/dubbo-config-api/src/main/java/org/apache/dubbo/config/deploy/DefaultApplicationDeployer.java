@@ -189,6 +189,10 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
     /**
      * Close registration of instance for pure Consumer process by setting registerConsumer to 'false'
      * by default is true.
+     *
+     * <p>
+     * {@link DefaultApplicationDeployer#prepareApplicationInstance()}中调用
+     * </p>
      */
     private boolean isRegisterConsumerInstance() {
         Boolean registerConsumer = getApplication().getRegisterConsumer();
@@ -809,6 +813,12 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#checkState(org.apache.dubbo.rpc.model.ModuleModel, org.apache.dubbo.common.deploy.DeployState)}
+     * 中调用
+     * </p>
+     */
     @Override
     public void prepareApplicationInstance() {
         if (hasPreparedApplicationInstance.get()) {
@@ -857,6 +867,11 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#prepareApplicationInstance()}中调用
+     * </p>
+     */
     private void exportMetricsService() {
         boolean exportMetrics = applicationModel
             .getApplicationConfigManager()
@@ -1010,6 +1025,11 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
      */
     private final AtomicInteger serviceRefreshState = new AtomicInteger(0);
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#prepareApplicationInstance()}中调用
+     * </p>
+     */
     private void registerServiceInstance() {
         try {
             registered = true;
@@ -1193,10 +1213,15 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
     /**
      * <p>
      * {@link ModuleModel#ModuleModel(org.apache.dubbo.rpc.model.ApplicationModel, boolean)}中调用
+     * state:{@link DeployState#PENDING}
+     * </p>
+     * <p>
+     * {@link DefaultModuleDeployer#onModuleStarting()}中调用
+     * state:{@link DeployState#STARTING}
      * </p>
      *
      * @param moduleModel
-     * @param state       {@link DeployState#PENDING}
+     * @param state
      */
     @Override
     public void notifyModuleChanged(ModuleModel moduleModel, DeployState state) {
@@ -1341,6 +1366,11 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#prepareApplicationInstance()}中调用
+     * </p>
+     */
     private void exportMetadataService() {
         if (!isStarting()) {
             return;
@@ -1361,6 +1391,12 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#checkState(org.apache.dubbo.rpc.model.ModuleModel, org.apache.dubbo.common.deploy.DeployState)}
+     * 中调用
+     * </p>
+     */
     private void onStarting() {
         // pending -> starting
         // started -> starting
