@@ -28,18 +28,7 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.ConcurrentHashSet;
 import org.apache.dubbo.common.utils.ReflectUtils;
 import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.config.AbstractConfig;
-import org.apache.dubbo.config.ApplicationConfig;
-import org.apache.dubbo.config.ConfigKeys;
-import org.apache.dubbo.config.MetadataReportConfig;
-import org.apache.dubbo.config.MetricsConfig;
-import org.apache.dubbo.config.ModuleConfig;
-import org.apache.dubbo.config.MonitorConfig;
-import org.apache.dubbo.config.ReferenceConfigBase;
-import org.apache.dubbo.config.RegistryConfig;
-import org.apache.dubbo.config.ServiceConfigBase;
-import org.apache.dubbo.config.SslConfig;
-import org.apache.dubbo.config.TracingConfig;
+import org.apache.dubbo.config.*;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelUtil;
@@ -73,6 +62,26 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
         LoggerFactory.getErrorTypeAwareLogger(AbstractConfigManager.class);
     private static final Set<Class<? extends AbstractConfig>> uniqueConfigTypes = new ConcurrentHashSet<>();
 
+    /**
+     * {@link AbstractConfigManager#addConfig(org.apache.dubbo.config.AbstractConfig)}中添加值
+     * 更确切的说,应该是在该方法中调用的{@link AbstractConfigManager#addIfAbsent(org.apache.dubbo.config.AbstractConfig, java.util.Map)}
+     * 中添加值。
+     * <p>
+     * 从代码中来看，只有{@link ReferenceConfigBase}和{@link ServiceConfigBase},即服务提供者和服务调用者,
+     * 两者有多个实例。
+     * <p>
+     * 该缓存的key为value(Map<String, AbstractConfig>)中的value，即{@link AbstractConfig}的实例的class的simpleName,
+     * 通过{@link AbstractConfig#getTagName(java.lang.Class)}方法获取的字符串。
+     * Map<String, AbstractConfig>中的value为{@link AbstractConfig}的实例,key为实例的id或者name
+     *
+     * <p>
+     * {@link ProviderConfig}
+     * {@link ConsumerConfig}
+     * {@link ModuleConfig}
+     * 这三者是在{@link org.apache.dubbo.config.deploy.DefaultModuleDeployer#loadConfigs()}
+     * 中添加的
+     * </p>
+     */
     final Map<String, Map<String, AbstractConfig>> configsCache = new ConcurrentHashMap<>();
 
     private final Map<String, AtomicInteger> configIdIndexes = new ConcurrentHashMap<>();
@@ -118,8 +127,7 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
         uniqueConfigTypes.add(ModuleConfig.class);
     }
 
-    public AbstractConfigManager(
-        ScopeModel scopeModel, Collection<Class<? extends AbstractConfig>> supportedConfigTypes) {
+    public AbstractConfigManager(ScopeModel scopeModel, Collection<Class<? extends AbstractConfig>> supportedConfigTypes) {
         this.scopeModel = scopeModel;
         this.applicationModel = ScopeModelUtil.getApplicationModel(scopeModel);
         this.supportedConfigTypes = supportedConfigTypes;
@@ -164,6 +172,8 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
      * Add the dubbo {@link AbstractConfig config}
      * <p>
      * {@link ModuleConfigManager#addService(org.apache.dubbo.config.ServiceConfigBase)}中调用
+     * {@link AbstractConfigManager#loadConfigsOfTypeFromProps(java.lang.Class)}中调用
+     * {@link ConfigManager#addConfigCenter(org.apache.dubbo.config.ConfigCenterConfig)}中调用
      * </p>
      *
      * @param config the dubbo {@link AbstractConfig config}
@@ -287,6 +297,16 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
         return false;
     }
 
+    /**
+     * <p>
+     * {@link ModuleConfigManager#getModule()}中调用
+     * </p>
+     *
+     * @param configType
+     * @param <C>
+     * @return
+     * @throws IllegalStateException
+     */
     protected <C extends AbstractConfig> C getSingleConfig(String configType) throws IllegalStateException {
         Map<String, AbstractConfig> configsMap = getConfigsMap(configType);
         int size = configsMap.size();
@@ -344,12 +364,24 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
         return (Collection<C>) getConfigsMap(configType).values();
     }
 
+    /**
+     * <p>
+     * {@link AbstractConfigManager#loadConfigsOfTypeFromProps(java.lang.Class)}中调用
+     * </p>
+     *
+     * @param configType
+     * @param <C>
+     * @return
+     */
     public <C extends AbstractConfig> Collection<C> getConfigs(Class<C> configType) {
         return (Collection<C>) getConfigsMap(getTagName(configType)).values();
     }
 
     /**
      * Get config by id
+     * <p>
+     * {@link AbstractConfigManager#getConfig(java.lang.Class, java.lang.String)}中调用
+     * </p>
      *
      * @param configType
      * @param id
@@ -361,6 +393,16 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
 
     /**
      * Get config instance by id or by name
+     * 从{@link AbstractConfigManager#configsCache}中,获取传入的参数cls的实例。
+     * <p>
+     * 获取步骤:
+     * 1,先根据cls获取Map<String, AbstractConfig>
+     * 2,再按idOrName当做id,即第一步中的map的key,获取实例
+     * 3,如果第二步没有获取到,则把idOrName当做name获取,这一步该cls必须有getName方法,没有直接返回null
+     * 4,遍历第一步获取的map的所有values,分别调用getName方法,获取的值与idOrName比较,equals的就返回
+     * <p>
+     * {@link AbstractConfigManager#loadConfigsOfTypeFromProps(java.lang.Class)}中调用
+     * </p>
      *
      * @param cls      Config type
      * @param idOrName the id or name of the config
@@ -581,8 +623,10 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
     public abstract void loadConfigs();
 
     /**
+     * 从Properties配置文件里面加载{@link AbstractConfig}
      * <p>
      * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#startConfigCenter()}中调用
+     * cls传递的是{@link ApplicationConfig}
      * </p>
      *
      * @param cls
@@ -591,15 +635,29 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
      */
     public <T extends AbstractConfig> List<T> loadConfigsOfTypeFromProps(Class<T> cls) {
         List<T> tmpConfigs = new ArrayList<>();
+        /**
+         * properties配置文件的数据吧？
+         */
         PropertiesConfiguration properties = environment.getPropertiesConfiguration();
 
         // load multiple configs with id
+        /**
+         * 比如cls是{@link ApplicationConfig},则获取
+         * dubbo.application.
+         * 为前缀的配置项
+         * 关于这个方法，注释已经很明白了，一定要看下注释
+         */
         Set<String> configIds = this.getConfigIdsFromProps(cls);
         configIds.forEach(id -> {
             if (!this.getConfig(cls, id).isPresent()) {
+                /**
+                 * 获取的实例如果不存在，则创建一个。
+                 * 重点注意：这个前提是在Properties文件中已经配置了，才会走到这一步
+                 */
                 T config;
                 try {
                     config = createConfig(cls, scopeModel);
+                    // 设置ID
                     config.setId(id);
                 } catch (Exception e) {
                     throw new IllegalStateException(
@@ -610,6 +668,8 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
                 boolean addDefaultNameConfig = false;
                 try {
                     // add default name config (same as id), e.g. dubbo.protocols.rest.port=1234
+                    // 如上注释，把dubbo.protocols.rest.name=rest 添加到配置环境中?
+                    // finally又给删除了……
                     key = DUBBO + "." + AbstractConfig.getPluralTagName(cls) + "." + id + ".name";
                     if (properties.getProperty(key) == null) {
                         properties.setProperty(key, id);
@@ -638,6 +698,12 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
         // If none config of the type, try load single config
         if (this.getConfigs(cls).isEmpty()) {
             // load single config
+            /**
+             * xml没有配置该项，且Properties中也未配置导致没有生成默认的。
+             * 这个也是从Properties中获取配置,不同的是获取的配置项不用,
+             * 上面是{@link AbstractConfig#getPluralTagName(java.lang.Class)}
+             * 这里是{@link AbstractConfig#getTypePrefix(java.lang.Class)}
+             */
             List<Map<String, String>> configurationMaps = environment.getConfigurationMaps();
             if (ConfigurationUtils.hasSubProperties(configurationMaps, AbstractConfig.getTypePrefix(cls))) {
                 T config;
@@ -657,6 +723,18 @@ public abstract class AbstractConfigManager extends LifecycleAdapter {
         return tmpConfigs;
     }
 
+    /**
+     * 根据传入的cls,创建一个{@link AbstractConfig}实例,并且设置scopeModel
+     * <p>
+     * {@link AbstractConfigManager#loadConfigsOfTypeFromProps(java.lang.Class)}中调用
+     * </p>
+     *
+     * @param cls
+     * @param scopeModel
+     * @param <T>
+     * @return
+     * @throws ReflectiveOperationException
+     */
     private <T extends AbstractConfig> T createConfig(Class<T> cls, ScopeModel scopeModel)
         throws ReflectiveOperationException {
         T config = cls.getDeclaredConstructor().newInstance();

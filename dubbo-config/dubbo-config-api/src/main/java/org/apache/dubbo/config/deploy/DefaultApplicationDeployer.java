@@ -41,12 +41,7 @@ import org.apache.dubbo.common.utils.ArrayUtils;
 import org.apache.dubbo.common.utils.ClassUtils;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.config.ApplicationConfig;
-import org.apache.dubbo.config.ConfigCenterConfig;
-import org.apache.dubbo.config.DubboShutdownHook;
-import org.apache.dubbo.config.MetadataReportConfig;
-import org.apache.dubbo.config.MetricsConfig;
-import org.apache.dubbo.config.RegistryConfig;
+import org.apache.dubbo.config.*;
 import org.apache.dubbo.config.context.ConfigManager;
 import org.apache.dubbo.config.utils.CompositeReferenceCache;
 import org.apache.dubbo.config.utils.ConfigValidationUtils;
@@ -224,22 +219,50 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
             if (initialized) {
                 return;
             }
+            /**
+             * 在自定标签中，感觉这个可以不用关注
+             */
             onInitialize();
 
             // register shutdown hook
+            /**
+             * {@link Runtime#getRuntime()}的{@link Runtime#addShutdownHook(java.lang.Thread)}方法
+             * 学学shut down hook，
+             */
             registerShutdownHook();
 
             startConfigCenter();
 
+            /**
+             * 检测下面几项是否有定义，如果没有定义，尝试从Properties中加载
+             * {@link ApplicationConfig}
+             * {@link MonitorConfig}
+             * {@link MetricsConfig}
+             * {@link TracingConfig}
+             * {@link ProtocolConfig}
+             * {@link RegistryConfig}
+             * {@link MetadataReportConfig}
+             */
             loadApplicationConfigs();
 
+            // 调用Default ModuleModel的ModuleDeployer的initialize方法
             initModuleDeployers();
 
+            /**
+             * 指标度量的上报，这个感觉应该很重要，有时间看下吧
+             */
             initMetricsReporter();
 
+            /**
+             * 有时间再看吧
+             */
             initMetricsService();
 
             // @since 2.7.8
+            /**
+             * <dubbo:metadata-report address="zookeeper://127.0.0.1:2181"/>
+             * 这个也先不看了
+             */
             startMetadataCenter();
 
             initialized = true;
@@ -251,6 +274,7 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
     }
 
     /**
+     * {@link Runtime#getRuntime()}的{@link Runtime#addShutdownHook(java.lang.Thread)}方法
      * <p>
      * {@link DefaultApplicationDeployer#initialize()}中调用
      * </p>
@@ -260,6 +284,7 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
     }
 
     /**
+     * 调用Default ModuleModel的ModuleDeployer的initialize方法
      * <p>
      * {@link DefaultApplicationDeployer#initialize()}调用
      * </p>
@@ -292,7 +317,7 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         // load application config
         /**
          * 加载{@link ApplicationConfig}
-         * 如果没有主动声明，就加载一个
+         * 如果没有主动声明，且Properties配置文件里有符合的配置
          * 例如:<dubbo:application name="demo-provider" >
          */
         configManager.loadConfigsOfTypeFromProps(ApplicationConfig.class);
@@ -305,21 +330,31 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         // load config centers
         /**
          * 加载{@link ConfigCenterConfig}
-         * 如果没有主动声明，就加载一个
+         * 如果没有主动声明，且Properties配置文件里有符合的配置
          * 例如：<dubbo:config-center address="zookeeper://127.0.0.1:2181"/>
          */
         configManager.loadConfigsOfTypeFromProps(ConfigCenterConfig.class);
 
+        /**
+         * 未配置<dubbo:config-center address="zookeeper://127.0.0.1:2181"/>
+         * 尝试用Registry来初始化ConfigCenter
+         */
         useRegistryAsConfigCenterIfNecessary();
 
         // check Config Center
         Collection<ConfigCenterConfig> configCenters = configManager.getConfigCenters();
         if (CollectionUtils.isEmpty(configCenters)) {
+            /**
+             * 未配置{@link ConfigCenterConfig},创建一个
+             */
             ConfigCenterConfig configCenterConfig = new ConfigCenterConfig();
             configCenterConfig.setScopeModel(applicationModel);
             configCenterConfig.refresh();
             ConfigValidationUtils.validateConfigCenterConfig(configCenterConfig);
             if (configCenterConfig.isValid()) {
+                /**
+                 * 如果走到这个分支，说明在上面的refresh方法里面，从Properties中拿到了配置项
+                 */
                 configManager.addConfigCenter(configCenterConfig);
                 configCenters = configManager.getConfigCenters();
             }
@@ -345,6 +380,7 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
     }
 
     /**
+     * <dubbo:metadata-report address="zookeeper://127.0.0.1:2181"/>
      * <p>
      * {@link DefaultApplicationDeployer#initialize()}调用
      * </p>
@@ -394,6 +430,9 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
     private void useRegistryAsConfigCenterIfNecessary() {
         // we use the loading status of DynamicConfiguration to decide whether ConfigCenter has been initiated.
         // 我们使用DynamicConfiguration的加载状态来决定ConfigCenter是否已经启动。
+        /**
+         * 在{@link DefaultApplicationDeployer#startConfigCenter()}方法的最后有添加
+         */
         if (environment.getDynamicConfiguration().isPresent()) {
             return;
         }
@@ -921,6 +960,14 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         return false;
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#startConfigCenter()}中有调用
+     * </p>
+     *
+     * @param configCenter
+     * @return
+     */
     private DynamicConfiguration prepareEnvironment(ConfigCenterConfig configCenter) {
         if (configCenter.isValid()) {
             if (!configCenter.checkOrUpdateInitialized(true)) {
@@ -1089,6 +1136,11 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#registerServices()}中调用
+     * </p>
+     */
     @Override
     public void refreshServiceInstance() {
         if (registered) {
@@ -1219,6 +1271,10 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
      * {@link DefaultModuleDeployer#onModuleStarting()}中调用
      * state:{@link DeployState#STARTING}
      * </p>
+     * <p>
+     * {@link DefaultModuleDeployer#onModuleStarted()}中调用
+     * state:{@link DeployState#STARTED}
+     * </p>
      *
      * @param moduleModel
      * @param state
@@ -1347,6 +1403,7 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
     }
 
     /**
+     * 调用{@link AbstractDeployer#listeners}的{@link DeployListener#onInitialize(org.apache.dubbo.rpc.model.ScopeModel)}方法
      * <p>
      * {@link DefaultApplicationDeployer#initialize()}中调用
      * </p>

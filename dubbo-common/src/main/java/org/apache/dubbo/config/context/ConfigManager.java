@@ -141,6 +141,13 @@ public class ConfigManager extends AbstractConfigManager implements ApplicationE
 
     // ConfigCenterConfig correlative methods
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#startConfigCenter()}中调用
+     * </p>
+     *
+     * @param configCenter
+     */
     public void addConfigCenter(ConfigCenterConfig configCenter) {
         addConfig(configCenter);
     }
@@ -258,6 +265,15 @@ public class ConfigManager extends AbstractConfigManager implements ApplicationE
     }
 
     /**
+     * 检测下面几项是否有定义，如果没有定义，尝试从Properties中加载
+     * {@link ApplicationConfig}
+     * {@link MonitorConfig}
+     * {@link MetricsConfig}
+     * {@link TracingConfig}
+     * {@link ProtocolConfig}
+     * {@link RegistryConfig}
+     * {@link MetadataReportConfig}
+     *
      * <p>
      * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#loadApplicationConfigs()}
      * 中调用

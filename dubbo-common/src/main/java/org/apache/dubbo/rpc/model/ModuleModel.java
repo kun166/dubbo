@@ -59,7 +59,7 @@ public class ModuleModel extends ScopeModel {
     private volatile ModuleDeployer deployer;
 
     /**
-     * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#initContext(org.apache.dubbo.config.spring.context.DubboSpringInitContext, org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.beans.factory.config.ConfigurableListableBeanFactory)}
+     * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#initContext}
      * 中设置成了true
      */
     private boolean lifeCycleManagedExternally = false;

@@ -68,6 +68,9 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
 
     /**
      * The provider configuration
+     * <p>
+     * {@link ServiceConfigBase#preProcessRefresh()}中赋值
+     * </p>
      */
     protected ProviderConfig provider;
 
@@ -136,6 +139,11 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return (delay == null && provider != null) ? provider.getDelay() : delay;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#checkAndUpdateSubConfigs()}中调用
+     * </p>
+     */
     protected void checkRef() {
         // reference should not be null, and is the implementation of the given interface
         if (ref == null) {
@@ -143,15 +151,15 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         }
         if (!interfaceClass.isInstance(ref)) {
             throw new IllegalStateException("The class "
-                    + getClassDesc(ref.getClass()) + " unimplemented interface "
-                    + getClassDesc(interfaceClass) + "!");
+                + getClassDesc(ref.getClass()) + " unimplemented interface "
+                + getClassDesc(interfaceClass) + "!");
         }
     }
 
     private String getClassDesc(Class clazz) {
         ClassLoader classLoader = clazz.getClassLoader();
         return clazz.getName() + "[classloader=" + classLoader.getClass().getName() + "@" + classLoader.hashCode()
-                + "]";
+            + "]";
     }
 
     public Optional<String> getContextPath(ProtocolConfig protocolConfig) {
@@ -166,14 +174,19 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return ref.getClass();
     }
 
+    /**
+     * <p>
+     * {@link AbstractConfig#refresh()}中调用
+     * </p>
+     */
     @Override
     protected void preProcessRefresh() {
         super.preProcessRefresh();
         convertProviderIdToProvider();
         if (provider == null) {
             provider = getModuleConfigManager()
-                    .getDefaultProvider()
-                    .orElseThrow(() -> new IllegalStateException("Default provider is not initialized"));
+                .getDefaultProvider()
+                .orElseThrow(() -> new IllegalStateException("Default provider is not initialized"));
         }
         // try set properties from `dubbo.service` if not set in current config
         refreshWithPrefixes(super.getPrefixes(), ConfigMode.OVERRIDE_IF_ABSENT);
@@ -212,6 +225,11 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return CollectionUtils.isEmpty(protocols) && StringUtils.isEmpty(protocolIds);
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#checkAndUpdateSubConfigs()}中调用
+     * </p>
+     */
     protected void completeCompoundConfigs() {
         super.completeCompoundConfigs(provider);
         if (provider != null) {
@@ -225,11 +243,16 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         }
     }
 
+    /**
+     * <p>
+     * {@link ServiceConfigBase#preProcessRefresh()}中调用
+     * </p>
+     */
     protected void convertProviderIdToProvider() {
         if (provider == null && StringUtils.hasText(providerIds)) {
             provider = getModuleConfigManager()
-                    .getProvider(providerIds)
-                    .orElseThrow(() -> new IllegalStateException("Provider config not found: " + providerIds));
+                .getProvider(providerIds)
+                .orElseThrow(() -> new IllegalStateException("Provider config not found: " + providerIds));
         }
     }
 
@@ -268,7 +291,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         try {
             if (StringUtils.isNotEmpty(interfaceName)) {
                 this.interfaceClass = Class.forName(
-                        interfaceName, true, Thread.currentThread().getContextClassLoader());
+                    interfaceName, true, Thread.currentThread().getContextClassLoader());
             }
         } catch (ClassNotFoundException t) {
             throw new IllegalStateException(t.getMessage(), t);
@@ -393,8 +416,8 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     @Override
     public String getVersion() {
         return StringUtils.isEmpty(this.version)
-                ? (provider != null ? provider.getVersion() : this.version)
-                : this.version;
+            ? (provider != null ? provider.getVersion() : this.version)
+            : this.version;
     }
 
     @Override

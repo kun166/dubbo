@@ -236,6 +236,13 @@ public class ServiceInstanceMetadataUtils {
                 serviceDiscovery.getUrl().getParameter(REGISTRY_KEY));
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#refreshServiceInstance()}中调用
+     * </p>
+     *
+     * @param applicationModel
+     */
     public static void refreshMetadataAndInstance(ApplicationModel applicationModel) {
         RegistryManager registryManager = applicationModel.getBeanFactory().getBean(RegistryManager.class);
         // update service instance revision

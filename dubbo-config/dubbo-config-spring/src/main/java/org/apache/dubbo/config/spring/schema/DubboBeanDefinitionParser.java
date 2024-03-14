@@ -251,6 +251,9 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                              * {@link ServiceConfigBase#setRef(java.lang.Object)}
                              */
                             if ("ref".equals(property)
+                                /**
+                                 * 这个地方只是对ref的校验
+                                 */
                                 && parserContext.getRegistry().containsBeanDefinition(value)) {
                                 BeanDefinition refBean =
                                     parserContext.getRegistry().getBeanDefinition(value);
@@ -263,6 +266,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                             }
                             /**
                              * 和spring 标签一样
+                             * 像{@link ServiceBean#setRegistry(RegistryConfig)},这个地方也是这么处理的
                              */
                             reference = new RuntimeBeanReference(value);
                         }

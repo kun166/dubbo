@@ -69,10 +69,18 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
     private static final ErrorTypeAwareLogger logger =
         LoggerFactory.getErrorTypeAwareLogger(DefaultModuleDeployer.class);
 
+    /**
+     * {@link DefaultModuleDeployer#exportServiceInternal(org.apache.dubbo.config.ServiceConfigBase)}
+     * 中添加值
+     */
     private final List<CompletableFuture<?>> asyncExportingFutures = new ArrayList<>();
 
     private final List<CompletableFuture<?>> asyncReferringFutures = new ArrayList<>();
 
+    /**
+     * {@link DefaultModuleDeployer#exportServiceInternal(org.apache.dubbo.config.ServiceConfigBase)}
+     * 中添加值
+     */
     private final List<ServiceConfigBase<?>> exportedServices = new ArrayList<>();
 
     /**
@@ -161,11 +169,24 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
             if (initialized) {
                 return;
             }
+            /**
+             * 目前看，应该是没影响，没实现该方法
+             */
             onInitialize();
 
+            /**
+             * {@link ProviderConfig}
+             * {@link ConsumerConfig}
+             * {@link ModuleConfig}
+             * 检测是否配置了该三项，如果没有配置，尝试从Properties配置中创建
+             */
             loadConfigs();
 
             // read ModuleConfig
+            /**
+             * <dubbo:module name="demo-module" >
+             * 这个地方没报错，不知道为什么
+             */
             ModuleConfig moduleConfig = moduleModel
                 .getConfigManager()
                 .getModule()
@@ -233,6 +254,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
             // prepare application instance
             // exclude internal module to avoid wait itself
             if (moduleModel != moduleModel.getApplicationModel().getInternalModule()) {
+                // 会走这个分支
                 applicationDeployer.prepareInternalModule();
             }
 
@@ -242,6 +264,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
             // if no async export/refer services, just set started
             if (asyncExportingFutures.isEmpty() && asyncReferringFutures.isEmpty()) {
                 // publish module started event
+                // 走这个分支
                 onModuleStarted();
 
                 // register services to registry
@@ -426,6 +449,11 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
         applicationDeployer.notifyModuleChanged(moduleModel, DeployState.STARTING);
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#startSync()}中调用
+     * </p>
+     */
     private void onModuleStarted() {
         if (isStarting()) {
             setStarted();
@@ -451,6 +479,13 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#startSync()}中调用
+     * </p>
+     *
+     * @param value
+     */
     private void completeStartFuture(boolean value) {
         if (startFuture != null && !startFuture.isDone()) {
             startFuture.complete(value);
@@ -500,11 +535,19 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
      * </p>
      */
     private void exportServices() {
+        /**
+         * ServiceConfigBase加入的地方在{@link org.apache.dubbo.config.spring.ServiceBean#afterPropertiesSet()}
+         */
         for (ServiceConfigBase sc : configManager.getServices()) {
             exportServiceInternal(sc);
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#startSync()}中调用
+     * </p>
+     */
     private void registerServices() {
         for (ServiceConfigBase sc : configManager.getServices()) {
             if (!Boolean.FALSE.equals(sc.isRegister())) {
@@ -514,6 +557,11 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
         applicationDeployer.refreshServiceInstance();
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#startSync()}中调用
+     * </p>
+     */
     private void checkReferences() {
         Optional<ModuleConfig> module = configManager.getModule();
         long timeout = module.map(ModuleConfig::getCheckReferenceTimeout).orElse(30000L);
@@ -522,9 +570,17 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#exportServices()}中调用
+     * </p>
+     *
+     * @param sc
+     */
     private void exportServiceInternal(ServiceConfigBase sc) {
         ServiceConfig<?> serviceConfig = (ServiceConfig<?>) sc;
         if (!serviceConfig.isRefreshed()) {
+            // 走这个分支
             serviceConfig.refresh();
         }
         if (sc.isExported()) {
@@ -560,6 +616,13 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
         }
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#registerServices()}中调用
+     * </p>
+     *
+     * @param sc
+     */
     private void registerServiceInternal(ServiceConfigBase sc) {
         ServiceConfig<?> serviceConfig = (ServiceConfig<?>) sc;
         if (!serviceConfig.isRefreshed()) {
@@ -590,6 +653,11 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
         asyncExportingFutures.clear();
     }
 
+    /**
+     * <p>
+     * {@link DefaultModuleDeployer#startSync()}中调用
+     * </p>
+     */
     private void referServices() {
         configManager.getReferences().forEach(rc -> {
             try {

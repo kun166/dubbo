@@ -128,6 +128,11 @@ public abstract class AbstractDeployer<E extends ScopeModel> implements Deployer
         }
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultModuleDeployer#onModuleStarted()}中调用
+     * </p>
+     */
     protected void setStarted() {
         this.state = STARTED;
         for (DeployListener<E> listener : listeners) {

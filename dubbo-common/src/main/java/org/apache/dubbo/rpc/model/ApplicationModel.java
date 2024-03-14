@@ -108,6 +108,10 @@ public class ApplicationModel extends ScopeModel {
      * During destroying the default FrameworkModel, the FrameworkModel.defaultModel() or ApplicationModel.defaultModel()
      * will return a broken model, maybe cause unpredictable problem.
      * Recommendation: Avoid using the default model as much as possible.
+     * <p>
+     * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#initContext}
+     * 中调用
+     * </p>
      *
      * @return the global default ApplicationModel
      */
@@ -382,6 +386,16 @@ public class ApplicationModel extends ScopeModel {
         return Collections.unmodifiableList(pubModuleModels);
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.spring.context.DubboSpringInitializer#initContext}
+     * 中调用
+     * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#initModuleDeployers()}
+     * 中调用
+     * </p>
+     *
+     * @return
+     */
     public ModuleModel getDefaultModule() {
         if (defaultModule == null) {
             synchronized (instLock) {

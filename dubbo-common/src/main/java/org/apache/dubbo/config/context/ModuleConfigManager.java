@@ -63,8 +63,7 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
     private final ConfigManager applicationConfigManager;
 
     public ModuleConfigManager(ModuleModel moduleModel) {
-        super(
-            moduleModel,
+        super(moduleModel,
             Arrays.asList(
                 ModuleConfig.class,
                 ServiceConfigBase.class,
@@ -81,6 +80,13 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
         addConfig(module);
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultModuleDeployer#initialize()}中调用
+     * </p>
+     *
+     * @return
+     */
     public Optional<ModuleConfig> getModule() {
         return ofNullable(getSingleConfig(getTagName(ModuleConfig.class)));
     }
@@ -140,6 +146,9 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
 
     /**
      * Only allows one default ProviderConfig
+     * <p>
+     * {@link ServiceConfigBase#preProcessRefresh()}中调用
+     * </p>
      */
     public Optional<ProviderConfig> getDefaultProvider() {
         List<ProviderConfig> providerConfigs = getDefaultConfigs(getConfigsMap(getTagName(ProviderConfig.class)));
@@ -291,6 +300,14 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
         configCache.remove(uniqueServiceName, config);
     }
 
+    /**
+     * {@link ProviderConfig}
+     * {@link ConsumerConfig}
+     * {@link ModuleConfig}
+     * <p>
+     * {@link org.apache.dubbo.config.deploy.DefaultModuleDeployer#loadConfigs()}中调用
+     * </p>
+     */
     @Override
     public void loadConfigs() {
         // load dubbo.providers.xxx
@@ -303,6 +320,9 @@ public class ModuleConfigManager extends AbstractConfigManager implements Module
         loadConfigsOfTypeFromProps(ModuleConfig.class);
 
         // check configs
+        /**
+         * 如果上面的Properties没有加载成功，则下面的代码继续加载
+         */
         checkDefaultAndValidateConfigs(ProviderConfig.class);
         checkDefaultAndValidateConfigs(ConsumerConfig.class);
         checkDefaultAndValidateConfigs(ModuleConfig.class);

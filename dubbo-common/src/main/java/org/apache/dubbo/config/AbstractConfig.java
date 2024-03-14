@@ -119,6 +119,14 @@ public abstract class AbstractConfig implements Serializable {
      * <p>
      * <b>NOTE:</b> the model maybe changed during config processing,
      * the extension spi instance needs to be reinitialized after changing the model!
+     * <p>
+     * {@link AbstractConfig#setScopeModel(org.apache.dubbo.rpc.model.ScopeModel)}中赋值。
+     * 该方法在子类的构造器中调用
+     * 从该方法调用的{@link AbstractConfig#checkScopeModel(org.apache.dubbo.rpc.model.ScopeModel)}中也能看到，
+     * 传入的必须是{@link ApplicationModel}
+     * 而在子类{@link AbstractMethodConfig#checkScopeModel(org.apache.dubbo.rpc.model.ScopeModel)}该方法被覆盖了，
+     * 传入的必须是{@link ModuleModel},感觉好儿戏啊……
+     * </p>
      */
     private transient volatile ScopeModel scopeModel;
 
@@ -157,6 +165,16 @@ public abstract class AbstractConfig implements Serializable {
         });
     }
 
+    /**
+     * 获取复数形式
+     * 在{@link AbstractConfig#getTagName(java.lang.Class)}的基础上，获取复数形式
+     * <p>
+     * {@link AbstractConfig#getPrefixes()}中调用
+     * </p>
+     *
+     * @param cls
+     * @return
+     */
     public static String getPluralTagName(Class<?> cls) {
         String tagName = getTagName(cls);
         if (tagName.endsWith("y")) {
@@ -593,6 +611,13 @@ public abstract class AbstractConfig implements Serializable {
         return false;
     }
 
+    /**
+     * <p>
+     * {@link ServiceConfigBase#preProcessRefresh()}中调用
+     * </p>
+     *
+     * @return
+     */
     @Parameter(excluded = true, attribute = false)
     @Transient
     public List<String> getPrefixes() {
@@ -617,6 +642,14 @@ public abstract class AbstractConfig implements Serializable {
         return prefixes;
     }
 
+    /**
+     * <p>
+     * {@link AbstractConfig#getPrefixes()}中调用
+     * </p>
+     *
+     * @param cls
+     * @return
+     */
     public static String getTypePrefix(Class<? extends AbstractConfig> cls) {
         return CommonConstants.DUBBO + "." + getTagName(cls);
     }
@@ -709,6 +742,13 @@ public abstract class AbstractConfig implements Serializable {
 
     /**
      * Dubbo config property override
+     * <p>
+     * {@link org.apache.dubbo.config.spring.ServiceBean}
+     * 在{@link org.apache.dubbo.config.deploy.DefaultModuleDeployer#exportServiceInternal(org.apache.dubbo.config.ServiceConfigBase)}
+     * 中调用
+     * <p>
+     * {@link ConfigCenterConfig}
+     * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#startConfigCenter()}中调用
      */
     public void refresh() {
         if (needRefresh) {
@@ -731,6 +771,14 @@ public abstract class AbstractConfig implements Serializable {
         refreshed.set(true);
     }
 
+    /**
+     * <p>
+     * {@link ServiceConfigBase#preProcessRefresh()}中调用
+     * </p>
+     *
+     * @param prefixes
+     * @param configMode
+     */
     protected void refreshWithPrefixes(List<String> prefixes, ConfigMode configMode) {
         Environment environment = getScopeModel().modelEnvironment();
         List<Map<String, String>> configurationMaps = environment.getConfigurationMaps();
