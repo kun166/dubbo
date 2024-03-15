@@ -85,6 +85,11 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
      */
     protected String group;
 
+    /**
+     * 在{@link ServiceConfigBase#ServiceConfigBase(org.apache.dubbo.rpc.model.ModuleModel)}中赋值
+     * 在{@link AbstractInterfaceConfig#initServiceMetadata(org.apache.dubbo.config.AbstractInterfaceConfig)}中赋属性
+     * 在{@link org.apache.dubbo.config.ServiceConfig#init()}中赋属性
+     */
     protected ServiceMetadata serviceMetadata;
     /**
      * Local impl class name for the service interface
@@ -915,6 +920,13 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         this.singleton = singleton;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#init()}中调用
+     * </p>
+     *
+     * @param interfaceConfig
+     */
     protected void initServiceMetadata(AbstractInterfaceConfig interfaceConfig) {
         serviceMetadata.setVersion(getVersion(interfaceConfig));
         serviceMetadata.setGroup(getGroup(interfaceConfig));

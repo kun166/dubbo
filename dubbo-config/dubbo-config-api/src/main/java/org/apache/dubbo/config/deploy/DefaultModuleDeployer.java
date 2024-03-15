@@ -610,6 +610,9 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
             asyncExportingFutures.add(future);
         } else {
             if (!sc.isExported()) {
+                /**
+                 * 下面这个方法需要好好看一下
+                 */
                 sc.export(RegisterTypeEnum.AUTO_REGISTER_BY_DEPLOYER);
                 exportedServices.add(sc);
             }

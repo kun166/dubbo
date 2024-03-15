@@ -17,6 +17,7 @@
 package org.apache.dubbo.common;
 
 import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.rpc.model.ServiceMetadata;
 import org.apache.dubbo.rpc.model.ServiceModel;
 
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_VERSION;
@@ -27,6 +28,12 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_VERSION;
 public class BaseServiceMetadata {
     public static final char COLON_SEPARATOR = ':';
 
+    /**
+     * {@link ServiceMetadata#ServiceMetadata(java.lang.String, java.lang.String, java.lang.String, java.lang.Class)}
+     * 构造器中赋值
+     * 如果调用的是无参构造器，则在下面方法中
+     * {@link BaseServiceMetadata#generateServiceKey()}赋值。该方法在{@link org.apache.dubbo.config.ServiceConfig#init()}中调用
+     */
     protected String serviceKey;
     protected String serviceInterfaceName;
     protected String version;
@@ -115,6 +122,11 @@ public class BaseServiceMetadata {
         return serviceKey;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#init()}中调用
+     * </p>
+     */
     public void generateServiceKey() {
         this.serviceKey = buildServiceKey(serviceInterfaceName, group, version);
     }

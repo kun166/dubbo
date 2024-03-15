@@ -23,13 +23,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Notice, this class currently has no usage inside Dubbo.
- *
+ * <p>
  * data related to service level such as name, version, classloader of business service,
  * security info, etc. Also, with a AttributeMap for extension.
  */
 public class ServiceMetadata extends BaseServiceMetadata {
 
     private String defaultGroup;
+
+    /**
+     * {@link org.apache.dubbo.config.ServiceConfig#init()}中赋值
+     * {@link org.apache.dubbo.config.spring.ServiceBean}自定义标签中的interface配置,转成的class
+     */
     private Class<?> serviceType;
 
     private Object target;
@@ -52,7 +57,8 @@ public class ServiceMetadata extends BaseServiceMetadata {
         this.serviceType = serviceType;
     }
 
-    public ServiceMetadata() {}
+    public ServiceMetadata() {
+    }
 
     @Override
     public String getServiceKey() {
@@ -91,6 +97,13 @@ public class ServiceMetadata extends BaseServiceMetadata {
         this.defaultGroup = defaultGroup;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#init()}中调用
+     * </p>
+     *
+     * @param serviceType
+     */
     public void setServiceType(Class<?> serviceType) {
         this.serviceType = serviceType;
     }

@@ -187,10 +187,29 @@ public abstract class AbstractConfig implements Serializable {
         return tagName + "s";
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.utils.ConfigValidationUtils#loadRegistries(org.apache.dubbo.config.AbstractInterfaceConfig, boolean)}
+     * 中调用
+     * </p>
+     *
+     * @param parameters
+     * @param config
+     */
     public static void appendParameters(Map<String, String> parameters, Object config) {
         appendParameters(parameters, config, null);
     }
 
+    /**
+     * <p>
+     * {@link AbstractConfig#appendParameters(java.util.Map, java.lang.Object)}
+     * 中调用
+     * </p>
+     *
+     * @param parameters
+     * @param config
+     * @param prefix
+     */
     @SuppressWarnings("unchecked")
     public static void appendParameters(Map<String, String> parameters, Object config, String prefix) {
         appendParameters0(parameters, config, prefix, true);
@@ -210,8 +229,21 @@ public abstract class AbstractConfig implements Serializable {
         appendParameters0(parameters, config, prefix, false);
     }
 
-    private static void appendParameters0(
-        Map<String, String> parameters, Object config, String prefix, boolean asParameters) {
+    /**
+     * <p>
+     * {@link AbstractConfig#appendParameters(java.util.Map, java.lang.Object, java.lang.String)}
+     * 中调用
+     * </p>
+     *
+     * @param parameters
+     * @param config
+     * @param prefix
+     * @param asParameters
+     */
+    private static void appendParameters0(Map<String, String> parameters,
+                                          Object config,
+                                          String prefix,
+                                          boolean asParameters) {
         if (config == null) {
             return;
         }

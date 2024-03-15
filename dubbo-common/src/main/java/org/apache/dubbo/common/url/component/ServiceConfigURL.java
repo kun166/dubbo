@@ -105,17 +105,15 @@ public class ServiceConfigURL extends URL {
         this(new PathURLAddress(protocol, username, password, path, host, port), URLParam.parse(parameters), null);
     }
 
-    public ServiceConfigURL(
-        String protocol,
-        String username,
-        String password,
-        String host,
-        int port,
-        String path,
-        Map<String, String> parameters,
-        Map<String, Object> attributes) {
-        this(
-            new PathURLAddress(protocol, username, password, path, host, port),
+    public ServiceConfigURL(String protocol,
+                            String username,
+                            String password,
+                            String host,
+                            int port,
+                            String path,
+                            Map<String, String> parameters,
+                            Map<String, Object> attributes) {
+        this(new PathURLAddress(protocol, username, password, path, host, port),
             URLParam.parse(parameters),
             attributes);
     }

@@ -48,6 +48,11 @@ public class ModuleModel extends ScopeModel {
      * 传递的是创建本实例的{@link ApplicationModel}实例
      */
     private final ApplicationModel applicationModel;
+
+    /**
+     * {@link ModuleModel#ModuleModel(org.apache.dubbo.rpc.model.ApplicationModel, boolean)}
+     * 构造函数中赋值
+     */
     private volatile ModuleServiceRepository serviceRepository;
     private volatile ModuleEnvironment moduleEnvironment;
     private volatile ModuleConfigManager moduleConfigManager;

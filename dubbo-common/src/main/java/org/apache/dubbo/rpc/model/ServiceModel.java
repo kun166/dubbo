@@ -27,6 +27,13 @@ import java.util.Set;
 public class ServiceModel {
     private String serviceKey;
     private Object proxyObject;
+
+    /**
+     * <p>
+     * {@link ServiceModel#setDestroyRunner(java.lang.Runnable)}中调用
+     * 销毁的时候调用的方法
+     * </p>
+     */
     private Runnable destroyRunner;
     private ClassLoader classLoader;
 
@@ -35,26 +42,30 @@ public class ServiceModel {
     private final ModuleModel moduleModel;
     private final ServiceDescriptor serviceModel;
 
+    /**
+     * {@link ServiceModel#setConfig(org.apache.dubbo.config.AbstractInterfaceConfig)}
+     * 中赋值,具体是一个{@link org.apache.dubbo.config.spring.ServiceBean}
+     */
     private AbstractInterfaceConfig config;
 
     private final ServiceMetadata serviceMetadata;
 
     public ServiceModel(
-            Object proxyObject,
-            String serviceKey,
-            ServiceDescriptor serviceModel,
-            ModuleModel moduleModel,
-            ClassLoader interfaceClassLoader) {
+        Object proxyObject,
+        String serviceKey,
+        ServiceDescriptor serviceModel,
+        ModuleModel moduleModel,
+        ClassLoader interfaceClassLoader) {
         this(proxyObject, serviceKey, serviceModel, moduleModel, null, interfaceClassLoader);
     }
 
     public ServiceModel(
-            Object proxyObject,
-            String serviceKey,
-            ServiceDescriptor serviceModel,
-            ModuleModel moduleModel,
-            ServiceMetadata serviceMetadata,
-            ClassLoader interfaceClassLoader) {
+        Object proxyObject,
+        String serviceKey,
+        ServiceDescriptor serviceModel,
+        ModuleModel moduleModel,
+        ServiceMetadata serviceMetadata,
+        ClassLoader interfaceClassLoader) {
         this.proxyObject = proxyObject;
         this.serviceKey = serviceKey;
         this.serviceModel = serviceModel;
@@ -77,6 +88,14 @@ public class ServiceModel {
         return config;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param config
+     */
     @Deprecated
     public void setConfig(AbstractInterfaceConfig config) {
         this.config = config;
@@ -84,6 +103,7 @@ public class ServiceModel {
 
     /**
      * ServiceModel should be decoupled from AbstractInterfaceConfig and removed in a future version
+     *
      * @return
      */
     @Deprecated
@@ -100,6 +120,7 @@ public class ServiceModel {
 
     /**
      * ServiceModel should be decoupled from AbstractInterfaceConfig and removed in a future version
+     *
      * @return
      */
     @Deprecated
@@ -178,6 +199,14 @@ public class ServiceModel {
         return destroyRunner;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param destroyRunner
+     */
     public void setDestroyRunner(Runnable destroyRunner) {
         this.destroyRunner = destroyRunner;
     }
@@ -196,25 +225,25 @@ public class ServiceModel {
         }
         ServiceModel that = (ServiceModel) o;
         return Objects.equals(serviceKey, that.serviceKey)
-                && Objects.equals(proxyObject, that.proxyObject)
-                && Objects.equals(destroyRunner, that.destroyRunner)
-                && Objects.equals(classLoader, that.classLoader)
-                && Objects.equals(interfaceClassLoader, that.interfaceClassLoader)
-                && Objects.equals(moduleModel, that.moduleModel)
-                && Objects.equals(serviceModel, that.serviceModel)
-                && Objects.equals(serviceMetadata, that.serviceMetadata);
+            && Objects.equals(proxyObject, that.proxyObject)
+            && Objects.equals(destroyRunner, that.destroyRunner)
+            && Objects.equals(classLoader, that.classLoader)
+            && Objects.equals(interfaceClassLoader, that.interfaceClassLoader)
+            && Objects.equals(moduleModel, that.moduleModel)
+            && Objects.equals(serviceModel, that.serviceModel)
+            && Objects.equals(serviceMetadata, that.serviceMetadata);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-                serviceKey,
-                proxyObject,
-                destroyRunner,
-                classLoader,
-                interfaceClassLoader,
-                moduleModel,
-                serviceModel,
-                serviceMetadata);
+            serviceKey,
+            proxyObject,
+            destroyRunner,
+            classLoader,
+            interfaceClassLoader,
+            moduleModel,
+            serviceModel,
+            serviceMetadata);
     }
 }

@@ -193,6 +193,16 @@ public class ConfigValidationUtils {
 
     public static final String IPV6_END_MARK = "]";
 
+    /**
+     * <p>
+     * {@link ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param interfaceConfig
+     * @param provider
+     * @return
+     */
     public static List<URL> loadRegistries(AbstractInterfaceConfig interfaceConfig, boolean provider) {
         // check && override if necessary
         List<URL> registryList = new ArrayList<>();
@@ -217,9 +227,16 @@ public class ConfigValidationUtils {
                     if (!map.containsKey(PROTOCOL_KEY)) {
                         map.put(PROTOCOL_KEY, DUBBO_PROTOCOL);
                     }
+                    // zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?
+                    // REGISTRY_CLUSTER=registry1&application=demo-provider&dubbo=2.0.2&executor-management-mode=isolation
+                    // &file-cache=true&pid=22422&registry-type=service&registry.type=service&release=3.2.9&timestamp=1710409161178
                     List<URL> urls = UrlUtils.parseURLs(address, map);
 
                     for (URL url : urls) {
+                        // service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?
+                        // REGISTRY_CLUSTER=registry1&application=demo-provider&dubbo=2.0.2&executor-management-mode=isolation
+                        // &file-cache=true&pid=22422&registry=zookeeper&registry-type=service&registry.type=service
+                        // &release=3.2.9&timestamp=1710409161178
                         url = URLBuilder.from(url)
                             .addParameter(REGISTRY_KEY, url.getProtocol())
                             .setProtocol(extractRegistryType(url))
@@ -236,11 +253,26 @@ public class ConfigValidationUtils {
         return genCompatibleRegistries(interfaceConfig.getScopeModel(), registryList, provider);
     }
 
+    /**
+     * <p>
+     * {@link ConfigValidationUtils#loadRegistries(org.apache.dubbo.config.AbstractInterfaceConfig, boolean)}
+     * 中调用
+     * </p>
+     *
+     * @param scopeModel
+     * @param registryList
+     * @param provider
+     * @return
+     */
     private static List<URL> genCompatibleRegistries(ScopeModel scopeModel, List<URL> registryList, boolean provider) {
         List<URL> result = new ArrayList<>(registryList.size());
         registryList.forEach(registryURL -> {
             if (provider) {
                 // for registries enabled service discovery, automatically register interface compatible addresses.
+                // service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?
+                // REGISTRY_CLUSTER=registry1&application=demo-provider&dubbo=2.0.2&executor-management-mode=isolation
+                // &file-cache=true&pid=22422&registry=zookeeper&registry-type=service&registry.type=service
+                // &release=3.2.9&timestamp=1710409161178
                 String registerMode;
                 if (SERVICE_REGISTRY_PROTOCOL.equals(registryURL.getProtocol())) {
                     registerMode = registryURL.getParameter(

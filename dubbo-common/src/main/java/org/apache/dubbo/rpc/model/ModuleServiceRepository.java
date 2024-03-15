@@ -40,6 +40,10 @@ public class ModuleServiceRepository {
 
     /**
      * services
+     * {@link ModuleServiceRepository#registerService(java.lang.Class, org.apache.dubbo.rpc.model.ServiceDescriptor)}
+     * 中添加数据
+     * key为interfaceClazz的全路径类名
+     * value为{@link CopyOnWriteArrayList}
      */
     private final ConcurrentMap<String, List<ServiceDescriptor>> services = new ConcurrentHashMap<>();
 
@@ -58,7 +62,7 @@ public class ModuleServiceRepository {
     public ModuleServiceRepository(ModuleModel moduleModel) {
         this.moduleModel = moduleModel;
         frameworkServiceRepository =
-                ScopeModelUtil.getFrameworkModel(moduleModel).getServiceRepository();
+            ScopeModelUtil.getFrameworkModel(moduleModel).getServiceRepository();
     }
 
     public ModuleModel getModuleModel() {
@@ -70,24 +74,24 @@ public class ModuleServiceRepository {
      */
     @Deprecated
     public void registerConsumer(
-            String serviceKey,
-            ServiceDescriptor serviceDescriptor,
-            ReferenceConfigBase<?> rc,
-            Object proxy,
-            ServiceMetadata serviceMetadata) {
+        String serviceKey,
+        ServiceDescriptor serviceDescriptor,
+        ReferenceConfigBase<?> rc,
+        Object proxy,
+        ServiceMetadata serviceMetadata) {
         ClassLoader classLoader = null;
         if (rc != null) {
             classLoader = rc.getInterfaceClassLoader();
         }
         ConsumerModel consumerModel = new ConsumerModel(
-                serviceMetadata.getServiceKey(), proxy, serviceDescriptor, serviceMetadata, null, classLoader);
+            serviceMetadata.getServiceKey(), proxy, serviceDescriptor, serviceMetadata, null, classLoader);
         this.registerConsumer(consumerModel);
     }
 
     public void registerConsumer(ConsumerModel consumerModel) {
         ConcurrentHashMapUtils.computeIfAbsent(
-                        consumers, consumerModel.getServiceKey(), (serviceKey) -> new CopyOnWriteArrayList<>())
-                .add(consumerModel);
+                consumers, consumerModel.getServiceKey(), (serviceKey) -> new CopyOnWriteArrayList<>())
+            .add(consumerModel);
     }
 
     /**
@@ -95,11 +99,11 @@ public class ModuleServiceRepository {
      */
     @Deprecated
     public void registerProvider(
-            String serviceKey,
-            Object serviceInstance,
-            ServiceDescriptor serviceModel,
-            ServiceConfigBase<?> serviceConfig,
-            ServiceMetadata serviceMetadata) {
+        String serviceKey,
+        Object serviceInstance,
+        ServiceDescriptor serviceModel,
+        ServiceConfigBase<?> serviceConfig,
+        ServiceMetadata serviceMetadata) {
         ClassLoader classLoader = null;
         Class<?> cla = null;
         if (serviceConfig != null) {
@@ -107,7 +111,7 @@ public class ModuleServiceRepository {
             cla = serviceConfig.getInterfaceClass();
         }
         ProviderModel providerModel =
-                new ProviderModel(serviceKey, serviceInstance, serviceModel, serviceMetadata, classLoader);
+            new ProviderModel(serviceKey, serviceInstance, serviceModel, serviceMetadata, classLoader);
         this.registerProvider(providerModel);
     }
 
@@ -116,25 +120,59 @@ public class ModuleServiceRepository {
         frameworkServiceRepository.registerProvider(providerModel);
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * </p>
+     *
+     * @param serviceDescriptor
+     * @return
+     */
     public ServiceDescriptor registerService(ServiceDescriptor serviceDescriptor) {
         return registerService(serviceDescriptor.getServiceInterfaceClass(), serviceDescriptor);
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param interfaceClazz
+     * @return
+     */
     public ServiceDescriptor registerService(Class<?> interfaceClazz) {
         ServiceDescriptor serviceDescriptor = new ReflectionServiceDescriptor(interfaceClazz);
         return registerService(interfaceClazz, serviceDescriptor);
     }
 
+    /**
+     * <p>
+     * {@link ModuleServiceRepository#registerService(org.apache.dubbo.rpc.model.ServiceDescriptor)}
+     * 中调用
+     * {@link ModuleServiceRepository#registerService(java.lang.Class)}
+     * 中调用
+     * </p>
+     *
+     * @param interfaceClazz
+     * @param serviceDescriptor
+     * @return
+     */
     public ServiceDescriptor registerService(Class<?> interfaceClazz, ServiceDescriptor serviceDescriptor) {
         List<ServiceDescriptor> serviceDescriptors = ConcurrentHashMapUtils.computeIfAbsent(
-                services, interfaceClazz.getName(), k -> new CopyOnWriteArrayList<>());
+            services, interfaceClazz.getName(), k -> new CopyOnWriteArrayList<>());
         synchronized (serviceDescriptors) {
+            /**
+             * 寻找到前一个ServiceDescriptor
+             */
             Optional<ServiceDescriptor> previous = serviceDescriptors.stream()
-                    .filter(s -> s.getServiceInterfaceClass().equals(interfaceClazz))
-                    .findFirst();
+                .filter(s -> s.getServiceInterfaceClass().equals(interfaceClazz))
+                .findFirst();
             if (previous.isPresent()) {
+                // 如果存在就返回
                 return previous.get();
             } else {
+                // 不存在，加入再返回
                 serviceDescriptors.add(serviceDescriptor);
                 return serviceDescriptor;
             }
@@ -158,11 +196,11 @@ public class ModuleServiceRepository {
         // if path is different with interface name, add extra path mapping
         if (!interfaceClass.getName().equals(path)) {
             List<ServiceDescriptor> serviceDescriptors =
-                    ConcurrentHashMapUtils.computeIfAbsent(services, path, _k -> new CopyOnWriteArrayList<>());
+                ConcurrentHashMapUtils.computeIfAbsent(services, path, _k -> new CopyOnWriteArrayList<>());
             synchronized (serviceDescriptors) {
                 Optional<ServiceDescriptor> previous = serviceDescriptors.stream()
-                        .filter(s -> s.getServiceInterfaceClass().equals(serviceDescriptor.getServiceInterfaceClass()))
-                        .findFirst();
+                    .filter(s -> s.getServiceInterfaceClass().equals(serviceDescriptor.getServiceInterfaceClass()))
+                    .findFirst();
                 if (previous.isPresent()) {
                     return previous.get();
                 } else {
@@ -189,7 +227,7 @@ public class ModuleServiceRepository {
         List<ConsumerModel> consumerModel = this.consumers.get(serviceKey);
         consumerModel.forEach(c -> c.setServiceKey(newServiceKey));
         ConcurrentHashMapUtils.computeIfAbsent(this.consumers, newServiceKey, (k) -> new CopyOnWriteArrayList<>())
-                .addAll(consumerModel);
+            .addAll(consumerModel);
         this.consumers.remove(serviceKey);
     }
 
@@ -213,7 +251,7 @@ public class ModuleServiceRepository {
 
     public List<ServiceDescriptor> getAllServices() {
         List<ServiceDescriptor> serviceDescriptors =
-                services.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+            services.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
         return Collections.unmodifiableList(serviceDescriptors);
     }
 
@@ -258,7 +296,7 @@ public class ModuleServiceRepository {
 
     public List<ConsumerModel> getReferredServices() {
         List<ConsumerModel> consumerModels =
-                consumers.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+            consumers.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
         return Collections.unmodifiableList(consumerModels);
     }
 

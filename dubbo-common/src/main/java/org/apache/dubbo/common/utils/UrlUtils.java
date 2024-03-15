@@ -75,6 +75,15 @@ public class UrlUtils {
      */
     private static final String URL_PARAM_STARTING_SYMBOL = "?";
 
+    /**
+     * <p>
+     * {@link UrlUtils#parseURLs(java.lang.String, java.util.Map)}中调用
+     * </p>
+     *
+     * @param address
+     * @param defaults
+     * @return
+     */
     public static URL parseURL(String address, Map<String, String> defaults) {
         if (StringUtils.isEmpty(address)) {
             throw new IllegalArgumentException("Address is not allowed to be empty, please re-enter.");
@@ -167,11 +176,22 @@ public class UrlUtils {
             }
         }
         if (changed) {
+            // zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?REGISTRY_CLUSTER=registry1&application=demo-provider&dubbo=2.0.2&executor-management-mode=isolation&file-cache=true&pid=22422&registry-type=service&registry.type=service&release=3.2.9&timestamp=1710409161178
             u = new ServiceConfigURL(protocol, username, password, host, port, path, parameters);
         }
         return u;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.utils.ConfigValidationUtils#loadRegistries(org.apache.dubbo.config.AbstractInterfaceConfig, boolean)}
+     * 中调用
+     * </p>
+     *
+     * @param address
+     * @param defaults
+     * @return
+     */
     public static List<URL> parseURLs(String address, Map<String, String> defaults) {
         if (StringUtils.isEmpty(address)) {
             throw new IllegalArgumentException("Address is not allowed to be empty, please re-enter.");
@@ -179,7 +199,7 @@ public class UrlUtils {
         String[] addresses = REGISTRY_SPLIT_PATTERN.split(address);
         if (addresses == null || addresses.length == 0) {
             throw new IllegalArgumentException(
-                    "Addresses is not allowed to be empty, please re-enter."); // here won't be empty
+                "Addresses is not allowed to be empty, please re-enter."); // here won't be empty
         }
         List<URL> registries = new ArrayList<URL>();
         for (String addr : addresses) {
@@ -379,9 +399,9 @@ public class UrlUtils {
             service = service.substring(0, i);
         }
         return URL.valueOf(EMPTY_PROTOCOL + "://0.0.0.0/" + service + URL_PARAM_STARTING_SYMBOL
-                + CATEGORY_KEY + "=" + category
-                + (group == null ? "" : "&" + GROUP_KEY + "=" + group)
-                + (version == null ? "" : "&" + VERSION_KEY + "=" + version));
+            + CATEGORY_KEY + "=" + category
+            + (group == null ? "" : "&" + GROUP_KEY + "=" + group)
+            + (version == null ? "" : "&" + VERSION_KEY + "=" + version));
     }
 
     public static boolean isMatchCategory(String category, String categories) {
@@ -406,8 +426,8 @@ public class UrlUtils {
         // Return false if the consumer interface is not equals the provider interface,
         // except one of the interface configurations is equals '*' (i.e. any value).
         if (!(ANY_VALUE.equals(consumerInterface)
-                || ANY_VALUE.equals(providerInterface)
-                || StringUtils.isEquals(consumerInterface, providerInterface))) {
+            || ANY_VALUE.equals(providerInterface)
+            || StringUtils.isEquals(consumerInterface, providerInterface))) {
             return false;
         }
 
@@ -437,13 +457,13 @@ public class UrlUtils {
 
         // If Group, Version, Classifier all matches, return true.
         boolean groupMatches = ANY_VALUE.equals(consumerGroup)
-                || StringUtils.isEquals(consumerGroup, providerGroup)
-                || StringUtils.isContains(consumerGroup, providerGroup);
+            || StringUtils.isEquals(consumerGroup, providerGroup)
+            || StringUtils.isContains(consumerGroup, providerGroup);
         boolean versionMatches =
-                ANY_VALUE.equals(consumerVersion) || StringUtils.isEquals(consumerVersion, providerVersion);
+            ANY_VALUE.equals(consumerVersion) || StringUtils.isEquals(consumerVersion, providerVersion);
         boolean classifierMatches = consumerClassifier == null
-                || ANY_VALUE.equals(consumerClassifier)
-                || StringUtils.isEquals(consumerClassifier, providerClassifier);
+            || ANY_VALUE.equals(consumerClassifier)
+            || StringUtils.isEquals(consumerClassifier, providerClassifier);
 
         return groupMatches && versionMatches && classifierMatches;
     }
@@ -489,8 +509,8 @@ public class UrlUtils {
 
     public static boolean isServiceKeyMatch(URL pattern, URL value) {
         return pattern.getParameter(INTERFACE_KEY).equals(value.getParameter(INTERFACE_KEY))
-                && isItemMatch(pattern.getGroup(), value.getGroup())
-                && isItemMatch(pattern.getVersion(), value.getVersion());
+            && isItemMatch(pattern.getGroup(), value.getGroup())
+            && isItemMatch(pattern.getVersion(), value.getVersion());
     }
 
     public static List<URL> classifyUrls(List<URL> urls, Predicate<URL> predicate) {
@@ -499,7 +519,7 @@ public class UrlUtils {
 
     public static boolean isConfigurator(URL url) {
         return OVERRIDE_PROTOCOL.equals(url.getProtocol())
-                || CONFIGURATORS_CATEGORY.equals(url.getCategory(DEFAULT_CATEGORY));
+            || CONFIGURATORS_CATEGORY.equals(url.getCategory(DEFAULT_CATEGORY));
     }
 
     public static boolean isRoute(URL url) {
@@ -508,14 +528,14 @@ public class UrlUtils {
 
     public static boolean isProvider(URL url) {
         return !OVERRIDE_PROTOCOL.equals(url.getProtocol())
-                && !ROUTE_PROTOCOL.equals(url.getProtocol())
-                && PROVIDERS_CATEGORY.equals(url.getCategory(PROVIDERS_CATEGORY));
+            && !ROUTE_PROTOCOL.equals(url.getProtocol())
+            && PROVIDERS_CATEGORY.equals(url.getCategory(PROVIDERS_CATEGORY));
     }
 
     public static boolean isRegistry(URL url) {
         return REGISTRY_PROTOCOL.equals(url.getProtocol())
-                || SERVICE_REGISTRY_PROTOCOL.equalsIgnoreCase(url.getProtocol())
-                || (url.getProtocol() != null && url.getProtocol().endsWith("-registry-protocol"));
+            || SERVICE_REGISTRY_PROTOCOL.equalsIgnoreCase(url.getProtocol())
+            || (url.getProtocol() != null && url.getProtocol().endsWith("-registry-protocol"));
     }
 
     /**

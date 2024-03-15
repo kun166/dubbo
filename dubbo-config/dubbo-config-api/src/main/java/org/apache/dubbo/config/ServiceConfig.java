@@ -50,11 +50,7 @@ import org.apache.dubbo.rpc.ProxyFactory;
 import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.ServerService;
 import org.apache.dubbo.rpc.cluster.ConfiguratorFactory;
-import org.apache.dubbo.rpc.model.ModuleModel;
-import org.apache.dubbo.rpc.model.ModuleServiceRepository;
-import org.apache.dubbo.rpc.model.ProviderModel;
-import org.apache.dubbo.rpc.model.ScopeModel;
-import org.apache.dubbo.rpc.model.ServiceDescriptor;
+import org.apache.dubbo.rpc.model.*;
 import org.apache.dubbo.rpc.service.GenericService;
 
 import java.beans.Transient;
@@ -139,10 +135,15 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      */
     private ProxyFactory proxyFactory;
 
+    /**
+     * {@link ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中赋值
+     */
     private ProviderModel providerModel;
 
     /**
      * Whether the provider has been exported
+     * {@link ServiceConfig#exported}方法被设置为true
      */
     private transient volatile boolean exported;
 
@@ -343,6 +344,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 this.refresh();
             }
             if (this.shouldExport()) {
+                /**
+                 * 主要就是给{@link AbstractInterfaceConfig#serviceMetadata}赋属性
+                 */
                 this.init();
 
                 if (shouldDelay()) {
@@ -558,8 +562,18 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         checkAndUpdateSubConfigs();
     }
 
+    /**
+     * <p>
+     * {@link ServiceConfig#export(org.apache.dubbo.common.constants.RegisterTypeEnum)}中调用
+     * </p>
+     *
+     * @param registerType
+     */
     protected synchronized void doExport(RegisterTypeEnum registerType) {
         if (unexported) {
+            /**
+             * {@link ServiceConfig#unexport()}被调用
+             */
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
         }
         if (exported) {
@@ -573,10 +587,23 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         exported();
     }
 
+    /**
+     * <p>
+     * {@link ServiceConfig#doExport(org.apache.dubbo.common.constants.RegisterTypeEnum)}中调用
+     * </p>
+     *
+     * @param registerType
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls(RegisterTypeEnum registerType) {
         ModuleServiceRepository repository = getScopeModel().getServiceRepository();
+        /**
+         * 返回的是一个{@link ReflectionServiceDescriptor}
+         */
         ServiceDescriptor serviceDescriptor;
+        /**
+         * 这是一个接口
+         */
         final boolean serverService = ref instanceof ServerService;
         if (serverService) {
             serviceDescriptor = ((ServerService) ref).getServiceDescriptor();
@@ -595,6 +622,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // Compatible with dependencies on ServiceModel#getServiceConfig(), and will be removed in a future version
         providerModel.setConfig(this);
 
+        /**
+         * 设置销毁方法
+         */
         providerModel.setDestroyRunner(getDestroyRunner());
         repository.registerProvider(providerModel);
 

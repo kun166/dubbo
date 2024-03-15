@@ -184,6 +184,9 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         super.preProcessRefresh();
         convertProviderIdToProvider();
         if (provider == null) {
+            /**
+             * 在{@link org.apache.dubbo.config.deploy.DefaultModuleDeployer#loadConfigs()}中加载
+             */
             provider = getModuleConfigManager()
                 .getDefaultProvider()
                 .orElseThrow(() -> new IllegalStateException("Default provider is not initialized"));
@@ -281,6 +284,13 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         }
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#init()}中调用
+     * </p>
+     *
+     * @return
+     */
     public Class<?> getInterfaceClass() {
         if (interfaceClass != null) {
             return interfaceClass;

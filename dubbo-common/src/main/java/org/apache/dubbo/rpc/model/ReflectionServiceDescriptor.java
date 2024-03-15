@@ -37,10 +37,18 @@ public class ReflectionServiceDescriptor implements ServiceDescriptor {
     private final String interfaceName;
     private final Class<?> serviceInterfaceClass;
     // to accelerate search
+    /**
+     * {@link ReflectionServiceDescriptor#initMethods()}中添加数据
+     * key为methodName
+     */
     private final Map<String, List<MethodDescriptor>> methods = new HashMap<>();
+    /**
+     * {@link ReflectionServiceDescriptor#initMethods()}中添加数据
+     * key为methodName,value的key为value的{@link ReflectionMethodDescriptor#paramDesc}
+     */
     private final Map<String, Map<String, MethodDescriptor>> descToMethods = new HashMap<>();
     private final ConcurrentNavigableMap<String, FullServiceDefinition> serviceDefinitions =
-            new ConcurrentSkipListMap<>();
+        new ConcurrentSkipListMap<>();
 
     public ReflectionServiceDescriptor(String interfaceName, Class<?> interfaceClass) {
         this.interfaceName = interfaceName;
@@ -51,6 +59,13 @@ public class ReflectionServiceDescriptor implements ServiceDescriptor {
         methods.put(methodDescriptor.getMethodName(), Collections.singletonList(methodDescriptor));
     }
 
+    /**
+     * <p>
+     * {@link ModuleServiceRepository#registerService(java.lang.Class)}中调用
+     * </p>
+     *
+     * @param interfaceClass
+     */
     public ReflectionServiceDescriptor(Class<?> interfaceClass) {
         this.serviceInterfaceClass = interfaceClass;
         this.interfaceName = interfaceClass.getName();
@@ -59,11 +74,18 @@ public class ReflectionServiceDescriptor implements ServiceDescriptor {
 
     public FullServiceDefinition getFullServiceDefinition(String serviceKey) {
         return serviceDefinitions.computeIfAbsent(
-                serviceKey,
-                (k) -> ServiceDefinitionBuilder.buildFullDefinition(serviceInterfaceClass, Collections.emptyMap()));
+            serviceKey,
+            (k) -> ServiceDefinitionBuilder.buildFullDefinition(serviceInterfaceClass, Collections.emptyMap()));
     }
 
+    /**
+     * <p>
+     * {@link ReflectionServiceDescriptor#ReflectionServiceDescriptor(java.lang.Class)}
+     * 构造函数中调用
+     * </p>
+     */
     private void initMethods() {
+        // 获取所有public方法,包括继承的
         Method[] methodsToExport = this.serviceInterfaceClass.getMethods();
         for (Method method : methodsToExport) {
             method.setAccessible(true);
@@ -80,14 +102,14 @@ public class ReflectionServiceDescriptor implements ServiceDescriptor {
             // void foo(Request, StreamObserver<Response>)  ---> SERVER_STREAM
             // StreamObserver<Response> foo(StreamObserver<Request>)   ---> BI_STREAM
             long streamMethodCount = methodList.stream()
-                    .peek(methodModel -> descMap.put(methodModel.getParamDesc(), methodModel))
-                    .map(MethodDescriptor::getRpcType)
-                    .filter(rpcType -> rpcType == MethodDescriptor.RpcType.SERVER_STREAM
-                            || rpcType == MethodDescriptor.RpcType.BI_STREAM)
-                    .count();
+                .peek(methodModel -> descMap.put(methodModel.getParamDesc(), methodModel))
+                .map(MethodDescriptor::getRpcType)
+                .filter(rpcType -> rpcType == MethodDescriptor.RpcType.SERVER_STREAM
+                    || rpcType == MethodDescriptor.RpcType.BI_STREAM)
+                .count();
             if (streamMethodCount > 1L)
                 throw new IllegalStateException("Stream method could not be overloaded.There are " + streamMethodCount
-                        + " stream method signatures. method(" + methodName + ")");
+                    + " stream method signatures. method(" + methodName + ")");
         });
     }
 
@@ -153,9 +175,9 @@ public class ReflectionServiceDescriptor implements ServiceDescriptor {
         }
         ReflectionServiceDescriptor that = (ReflectionServiceDescriptor) o;
         return Objects.equals(interfaceName, that.interfaceName)
-                && Objects.equals(serviceInterfaceClass, that.serviceInterfaceClass)
-                && Objects.equals(methods, that.methods)
-                && Objects.equals(descToMethods, that.descToMethods);
+            && Objects.equals(serviceInterfaceClass, that.serviceInterfaceClass)
+            && Objects.equals(methods, that.methods)
+            && Objects.equals(descToMethods, that.descToMethods);
     }
 
     @Override

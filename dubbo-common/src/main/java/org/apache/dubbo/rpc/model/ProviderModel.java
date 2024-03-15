@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc.model;
 
+import org.apache.dubbo.common.BaseServiceMetadata;
 import org.apache.dubbo.common.URL;
 
 import java.lang.reflect.Method;
@@ -33,6 +34,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class ProviderModel extends ServiceModel {
     private final List<RegisterStatedURL> urls;
+
+    /**
+     * 构造函数中调用的{@link ProviderModel#initMethod(java.lang.Class)}中添加值
+     */
     private final Map<String, List<ProviderMethodModel>> methods = new HashMap<>();
 
     /**
@@ -43,10 +48,10 @@ public class ProviderModel extends ServiceModel {
     private volatile long lastInvokeTime = 0;
 
     public ProviderModel(
-            String serviceKey,
-            Object serviceInstance,
-            ServiceDescriptor serviceDescriptor,
-            ClassLoader interfaceClassLoader) {
+        String serviceKey,
+        Object serviceInstance,
+        ServiceDescriptor serviceDescriptor,
+        ClassLoader interfaceClassLoader) {
         super(serviceInstance, serviceKey, serviceDescriptor, null, interfaceClassLoader);
         if (null == serviceInstance) {
             throw new IllegalArgumentException("Service[" + serviceKey + "]Target is NULL.");
@@ -56,11 +61,11 @@ public class ProviderModel extends ServiceModel {
     }
 
     public ProviderModel(
-            String serviceKey,
-            Object serviceInstance,
-            ServiceDescriptor serviceDescriptor,
-            ServiceMetadata serviceMetadata,
-            ClassLoader interfaceClassLoader) {
+        String serviceKey,
+        Object serviceInstance,
+        ServiceDescriptor serviceDescriptor,
+        ServiceMetadata serviceMetadata,
+        ClassLoader interfaceClassLoader) {
         super(serviceInstance, serviceKey, serviceDescriptor, null, serviceMetadata, interfaceClassLoader);
         if (null == serviceInstance) {
             throw new IllegalArgumentException("Service[" + serviceKey + "]Target is NULL.");
@@ -70,13 +75,26 @@ public class ProviderModel extends ServiceModel {
         this.urls = new ArrayList<>(1);
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param serviceKey           可参考{@link BaseServiceMetadata#generateServiceKey()}
+     * @param serviceInstance      最终提供服务的实例
+     * @param serviceModel         {@link ReflectionServiceDescriptor}
+     * @param moduleModel          这个没什么可说的,{@link ModuleModel}
+     * @param serviceMetadata      interface的元数据
+     * @param interfaceClassLoader
+     */
     public ProviderModel(
-            String serviceKey,
-            Object serviceInstance,
-            ServiceDescriptor serviceModel,
-            ModuleModel moduleModel,
-            ServiceMetadata serviceMetadata,
-            ClassLoader interfaceClassLoader) {
+        String serviceKey,
+        Object serviceInstance,
+        ServiceDescriptor serviceModel,
+        ModuleModel moduleModel,
+        ServiceMetadata serviceMetadata,
+        ClassLoader interfaceClassLoader) {
         super(serviceInstance, serviceKey, serviceModel, moduleModel, serviceMetadata, interfaceClassLoader);
         if (null == serviceInstance) {
             throw new IllegalArgumentException("Service[" + serviceKey + "]Target is NULL.");
