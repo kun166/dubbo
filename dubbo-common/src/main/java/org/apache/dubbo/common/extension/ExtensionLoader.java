@@ -760,6 +760,14 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#postProcessAfterScopeModelChanged(org.apache.dubbo.rpc.model.ScopeModel, org.apache.dubbo.rpc.model.ScopeModel)}
+     * 中调用
+     * </p>
+     *
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
         checkDestroyed();
@@ -1703,6 +1711,13 @@ public class ExtensionLoader<T> {
         return name.toLowerCase();
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#getAdaptiveExtension()}中调用
+     * </p>
+     *
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
@@ -1718,6 +1733,13 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#createAdaptiveExtension()}中调用
+     * </p>
+     *
+     * @return
+     */
     private Class<?> getAdaptiveExtensionClass() {
         getExtensionClasses();
         if (cachedAdaptiveClass != null) {
@@ -1726,6 +1748,13 @@ public class ExtensionLoader<T> {
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#getAdaptiveExtensionClass()}中调用
+     * </p>
+     *
+     * @return
+     */
     private Class<?> createAdaptiveExtensionClass() {
         // Adaptive Classes' ClassLoader should be the same with Real SPI interface classes' ClassLoader
         ClassLoader classLoader = type.getClassLoader();

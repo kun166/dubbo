@@ -162,9 +162,20 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
             + "]";
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param protocolConfig
+     * @return
+     */
     public Optional<String> getContextPath(ProtocolConfig protocolConfig) {
+        // 默认为null
         String contextPath = protocolConfig.getContextpath();
         if (StringUtils.isEmpty(contextPath) && provider != null) {
+            // 默认为null
             contextPath = provider.getContextpath();
         }
         return Optional.ofNullable(contextPath);

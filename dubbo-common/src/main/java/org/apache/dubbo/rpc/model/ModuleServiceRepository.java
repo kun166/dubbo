@@ -115,6 +115,14 @@ public class ModuleServiceRepository {
         this.registerProvider(providerModel);
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param providerModel
+     */
     public void registerProvider(ProviderModel providerModel) {
         providers.putIfAbsent(providerModel.getServiceKey(), providerModel);
         frameworkServiceRepository.registerProvider(providerModel);
@@ -186,6 +194,11 @@ public class ModuleServiceRepository {
      * 1. services with different interfaces are not allowed to have the same path.
      * 2. services share the same interface but has different group/version can share the same path.
      * 3. path's default value is the name of the interface.
+     *
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#doExportUrls(org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
      *
      * @param path
      * @param interfaceClass

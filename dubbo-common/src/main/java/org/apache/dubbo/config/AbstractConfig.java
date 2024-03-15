@@ -488,6 +488,14 @@ public abstract class AbstractConfig implements Serializable {
         return ApplicationModel.defaultModel();
     }
 
+    /**
+     * <p>
+     * {@link AbstractConfig#AbstractConfig(org.apache.dubbo.rpc.model.ScopeModel)}
+     * 构造函数中调用
+     * </p>
+     *
+     * @param scopeModel
+     */
     public final void setScopeModel(ScopeModel scopeModel) {
         if (scopeModel != null && this.scopeModel != scopeModel) {
             checkScopeModel(scopeModel);
