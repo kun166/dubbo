@@ -48,6 +48,14 @@ public class FrameworkServiceRepository {
         this.frameworkModel = frameworkModel;
     }
 
+    /**
+     * <p>
+     * {@link ModuleServiceRepository#registerProvider(org.apache.dubbo.rpc.model.ProviderModel)}
+     * 中调用
+     * </p>
+     *
+     * @param providerModel
+     */
     public void registerProvider(ProviderModel providerModel) {
         String key = providerModel.getServiceKey();
         ProviderModel previous = providers.putIfAbsent(key, providerModel);
@@ -57,8 +65,8 @@ public class FrameworkServiceRepository {
         }
         String keyWithoutGroup = keyWithoutGroup(key);
         ConcurrentHashMapUtils.computeIfAbsent(
-                        providersWithoutGroup, keyWithoutGroup, (k) -> new CopyOnWriteArrayList<>())
-                .add(providerModel);
+                providersWithoutGroup, keyWithoutGroup, (k) -> new CopyOnWriteArrayList<>())
+            .add(providerModel);
     }
 
     public void unregisterProvider(ProviderModel providerModel) {
@@ -91,9 +99,9 @@ public class FrameworkServiceRepository {
     public List<ConsumerModel> allConsumerModels() {
         List<ConsumerModel> consumerModels = new LinkedList<>();
         frameworkModel
-                .getApplicationModels()
-                .forEach(applicationModel -> consumerModels.addAll(
-                        applicationModel.getApplicationServiceRepository().allConsumerModels()));
+            .getApplicationModels()
+            .forEach(applicationModel -> consumerModels.addAll(
+                applicationModel.getApplicationServiceRepository().allConsumerModels()));
         return Collections.unmodifiableList(consumerModels);
     }
 

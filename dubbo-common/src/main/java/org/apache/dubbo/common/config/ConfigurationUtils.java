@@ -78,8 +78,8 @@ public final class ConfigurationUtils {
      */
     public static Configuration getSystemConfiguration(ScopeModel scopeModel) {
         return getScopeModelOrDefaultApplicationModel(scopeModel)
-                .modelEnvironment()
-                .getSystemConfiguration();
+            .modelEnvironment()
+            .getSystemConfiguration();
     }
 
     /**
@@ -89,8 +89,8 @@ public final class ConfigurationUtils {
      */
     public static Configuration getEnvConfiguration(ScopeModel scopeModel) {
         return getScopeModelOrDefaultApplicationModel(scopeModel)
-                .modelEnvironment()
-                .getEnvironmentConfiguration();
+            .modelEnvironment()
+            .getEnvironmentConfiguration();
     }
 
     /**
@@ -102,8 +102,8 @@ public final class ConfigurationUtils {
      */
     public static Configuration getGlobalConfiguration(ScopeModel scopeModel) {
         return getScopeModelOrDefaultApplicationModel(scopeModel)
-                .modelEnvironment()
-                .getConfiguration();
+            .modelEnvironment()
+            .getConfiguration();
     }
 
     public static Configuration getDynamicGlobalConfiguration(ScopeModel scopeModel) {
@@ -169,11 +169,22 @@ public final class ConfigurationUtils {
         ConfigurationUtils.expectedShutdownTime = expectedShutdownTime;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.utils.ConfigValidationUtils#genCompatibleRegistries(org.apache.dubbo.rpc.model.ScopeModel, java.util.List, boolean)}
+     * 中调用
+     * </p>
+     *
+     * @param realScopeModel
+     * @param key
+     * @param defaultValue
+     * @return
+     */
     public static String getCachedDynamicProperty(ScopeModel realScopeModel, String key, String defaultValue) {
         ScopeModel scopeModel = getScopeModelOrDefaultApplicationModel(realScopeModel);
         ConfigurationCache configurationCache = scopeModel.getBeanFactory().getBean(ConfigurationCache.class);
         String value = configurationCache.computeIfAbsent(
-                key, _k -> ConfigurationUtils.getDynamicProperty(scopeModel, _k, ""));
+            key, _k -> ConfigurationUtils.getDynamicProperty(scopeModel, _k, ""));
         return StringUtils.isEmpty(value) ? defaultValue : value;
     }
 
@@ -252,7 +263,7 @@ public final class ConfigurationUtils {
      * @return
      */
     public static <V extends Object> Map<String, V> getSubProperties(
-            Collection<Map<String, V>> configMaps, String prefix) {
+        Collection<Map<String, V>> configMaps, String prefix) {
         Map<String, V> map = new LinkedHashMap<>();
         for (Map<String, V> configMap : configMaps) {
             getSubProperties(configMap, prefix, map);
@@ -265,7 +276,7 @@ public final class ConfigurationUtils {
     }
 
     private static <V extends Object> Map<String, V> getSubProperties(
-            Map<String, V> configMap, String prefix, Map<String, V> resultMap) {
+        Map<String, V> configMap, String prefix, Map<String, V> resultMap) {
         if (!prefix.endsWith(".")) {
             prefix += ".";
         }
@@ -283,8 +294,8 @@ public final class ConfigurationUtils {
                 String key = entry.getKey();
                 V val = entry.getValue();
                 if (StringUtils.startsWithIgnoreCase(key, prefix)
-                        && key.length() > prefix.length()
-                        && !ConfigurationUtils.isEmptyValue(val)) {
+                    && key.length() > prefix.length()
+                    && !ConfigurationUtils.isEmptyValue(val)) {
 
                     String k = key.substring(prefix.length());
                     // convert camelCase/snake_case to kebab-case
@@ -323,8 +334,8 @@ public final class ConfigurationUtils {
         for (Map.Entry<String, V> entry : copy.entrySet()) {
             String key = entry.getKey();
             if (StringUtils.startsWithIgnoreCase(key, prefix)
-                    && key.length() > prefix.length()
-                    && !ConfigurationUtils.isEmptyValue(entry.getValue())) {
+                && key.length() > prefix.length()
+                && !ConfigurationUtils.isEmptyValue(entry.getValue())) {
                 return true;
             }
         }
@@ -363,8 +374,8 @@ public final class ConfigurationUtils {
                 String key = entry.getKey();
                 V val = entry.getValue();
                 if (StringUtils.startsWithIgnoreCase(key, prefix)
-                        && key.length() > prefix.length()
-                        && !ConfigurationUtils.isEmptyValue(val)) {
+                    && key.length() > prefix.length()
+                    && !ConfigurationUtils.isEmptyValue(val)) {
 
                     String k = key.substring(prefix.length());
                     int endIndex = k.indexOf(".");
@@ -387,9 +398,9 @@ public final class ConfigurationUtils {
      * @see 2.7.4
      */
     public static DynamicConfigurationFactory getDynamicConfigurationFactory(
-            ExtensionAccessor extensionAccessor, String name) {
+        ExtensionAccessor extensionAccessor, String name) {
         ExtensionLoader<DynamicConfigurationFactory> loader =
-                extensionAccessor.getExtensionLoader(DynamicConfigurationFactory.class);
+            extensionAccessor.getExtensionLoader(DynamicConfigurationFactory.class);
         return loader.getOrDefaultExtension(name);
     }
 
@@ -431,9 +442,9 @@ public final class ConfigurationUtils {
     @Deprecated
     public static Configuration getDynamicGlobalConfiguration() {
         return ApplicationModel.defaultModel()
-                .getDefaultModule()
-                .modelEnvironment()
-                .getDynamicGlobalConfiguration();
+            .getDefaultModule()
+            .modelEnvironment()
+            .getDynamicGlobalConfiguration();
     }
 
     /**

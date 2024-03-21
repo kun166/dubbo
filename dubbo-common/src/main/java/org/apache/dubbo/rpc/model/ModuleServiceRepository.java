@@ -54,6 +54,10 @@ public class ModuleServiceRepository {
 
     /**
      * providers
+     * <p>
+     * {@link ModuleServiceRepository#registerProvider(org.apache.dubbo.rpc.model.ProviderModel)}
+     * 中添加值
+     * </p>
      */
     private final ConcurrentMap<String, ProviderModel> providers = new ConcurrentHashMap<>();
 

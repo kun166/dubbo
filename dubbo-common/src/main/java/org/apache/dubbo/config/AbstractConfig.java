@@ -789,6 +789,9 @@ public abstract class AbstractConfig implements Serializable {
      * <p>
      * {@link ConfigCenterConfig}
      * {@link org.apache.dubbo.config.deploy.DefaultApplicationDeployer#startConfigCenter()}中调用
+     * <p>
+     * {@link RegistryConfig}
+     * {@link org.apache.dubbo.config.utils.ConfigValidationUtils#loadRegistries(org.apache.dubbo.config.AbstractInterfaceConfig, boolean)}
      */
     public void refresh() {
         if (needRefresh) {

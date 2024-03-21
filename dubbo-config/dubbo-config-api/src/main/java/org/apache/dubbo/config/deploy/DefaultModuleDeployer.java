@@ -609,6 +609,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
 
             asyncExportingFutures.add(future);
         } else {
+            // 走这个分支
             if (!sc.isExported()) {
                 /**
                  * 下面这个方法需要好好看一下

@@ -22,6 +22,7 @@ import org.apache.dubbo.common.beans.support.InstantiationStrategy;
 import org.apache.dubbo.common.compact.Dubbo2ActivateUtils;
 import org.apache.dubbo.common.compact.Dubbo2CompactUtils;
 import org.apache.dubbo.common.context.Lifecycle;
+import org.apache.dubbo.common.extension.inject.AdaptiveExtensionInjector;
 import org.apache.dubbo.common.extension.support.ActivateComparator;
 import org.apache.dubbo.common.extension.support.WrapperComparator;
 import org.apache.dubbo.common.lang.Prioritized;
@@ -38,12 +39,7 @@ import org.apache.dubbo.common.utils.Holder;
 import org.apache.dubbo.common.utils.NativeUtils;
 import org.apache.dubbo.common.utils.ReflectUtils;
 import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.rpc.model.ApplicationModel;
-import org.apache.dubbo.rpc.model.FrameworkModel;
-import org.apache.dubbo.rpc.model.ModuleModel;
-import org.apache.dubbo.rpc.model.ScopeModel;
-import org.apache.dubbo.rpc.model.ScopeModelAccessor;
-import org.apache.dubbo.rpc.model.ScopeModelAware;
+import org.apache.dubbo.rpc.model.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -116,6 +112,12 @@ public class ExtensionLoader<T> {
 
     private final Class<?> type;
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#ExtensionLoader(java.lang.Class, org.apache.dubbo.common.extension.ExtensionDirector, org.apache.dubbo.rpc.model.ScopeModel)}
+     * 构造函数中赋值{@link AdaptiveExtensionInjector}
+     * </p>
+     */
     private final ExtensionInjector injector;
 
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<>();
@@ -166,7 +168,16 @@ public class ExtensionLoader<T> {
     private final Set<String> unacceptableExceptions = new ConcurrentHashSet<>();
 
     private final ExtensionDirector extensionDirector;
+
+    /**
+     * 构造器中赋值
+     * {@link ScopeModelAwareExtensionProcessor}
+     */
     private final List<ExtensionPostProcessor> extensionPostProcessors;
+
+    /**
+     * {@link ExtensionLoader#initInstantiationStrategy()}中赋值
+     */
     private InstantiationStrategy instantiationStrategy;
     private final ActivateComparator activateComparator;
     /**
@@ -254,7 +265,16 @@ public class ExtensionLoader<T> {
         this.scopeModel = scopeModel;
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#ExtensionLoader(java.lang.Class, org.apache.dubbo.common.extension.ExtensionDirector, org.apache.dubbo.rpc.model.ScopeModel)}
+     * 构造函数中调用
+     * </p>
+     */
     private void initInstantiationStrategy() {
+        /**
+         * {@link ScopeModelAwareExtensionProcessor}
+         */
         instantiationStrategy = extensionPostProcessors.stream()
             .filter(extensionPostProcessor -> extensionPostProcessor instanceof ScopeModelAccessor)
             .map(extensionPostProcessor -> new InstantiationStrategy((ScopeModelAccessor) extensionPostProcessor))
@@ -575,6 +595,9 @@ public class ExtensionLoader<T> {
 
     /**
      * Find the extension with the given name.
+     * <p>
+     * 这个方法经常调用，需要关注
+     * </p>
      *
      * @throws IllegalStateException If the specified extension is not found.
      */
@@ -586,6 +609,15 @@ public class ExtensionLoader<T> {
         return extension;
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#getExtension(java.lang.String)}中调用
+     * </p>
+     *
+     * @param name
+     * @param wrap
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public T getExtension(String name, boolean wrap) {
         checkDestroyed();
@@ -593,6 +625,9 @@ public class ExtensionLoader<T> {
             throw new IllegalArgumentException("Extension name == null");
         }
         if ("true".equals(name)) {
+            /**
+             * 呃，这个地方一定要注意啊，细节
+             */
             return getDefaultExtension();
         }
         String cacheKey = name;
@@ -762,6 +797,8 @@ public class ExtensionLoader<T> {
 
     /**
      * <p>
+     * {@link ExtensionLoader#ExtensionLoader(java.lang.Class, org.apache.dubbo.common.extension.ExtensionDirector, org.apache.dubbo.rpc.model.ScopeModel)}
+     * 中调用
      * {@link org.apache.dubbo.config.ServiceConfig#postProcessAfterScopeModelChanged(org.apache.dubbo.rpc.model.ScopeModel, org.apache.dubbo.rpc.model.ScopeModel)}
      * 中调用
      * </p>
@@ -820,6 +857,15 @@ public class ExtensionLoader<T> {
         return new IllegalStateException(buf.toString());
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#getExtension(java.lang.String, boolean)}中调用
+     * </p>
+     *
+     * @param name
+     * @param wrap
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private T createExtension(String name, boolean wrap) {
         Class<?> clazz = getExtensionClasses().get(name);
@@ -872,6 +918,15 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#createExtension(java.lang.String, boolean)}中调用
+     * </p>
+     *
+     * @param type
+     * @return
+     * @throws ReflectiveOperationException
+     */
     private Object createExtensionInstance(Class<?> type) throws ReflectiveOperationException {
         return instantiationStrategy.instantiate(type);
     }
@@ -903,6 +958,14 @@ public class ExtensionLoader<T> {
         return getExtensionClasses().containsKey(name);
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#createExtension(java.lang.String, boolean)}中调用
+     * </p>
+     *
+     * @param instance
+     * @return
+     */
     private T injectExtension(T instance) {
         if (injector == null) {
             return instance;
@@ -1004,6 +1067,7 @@ public class ExtensionLoader<T> {
 
     /**
      * {@link ExtensionLoader#getSupportedExtensions()}中调用
+     * {@link ExtensionLoader#createExtension(java.lang.String, boolean)}中调用
      *
      * @return
      */
@@ -1068,6 +1132,9 @@ public class ExtensionLoader<T> {
 
             // compatible with old ExtensionFactory
             if (this.type == ExtensionInjector.class) {
+                /**
+                 * 这个地方关注一下吧，好像也没什么用
+                 */
                 loadDirectory(extensionClasses, strategy, ExtensionFactory.class.getName());
             }
         }
@@ -1216,6 +1283,20 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#loadDirectoryInternal(java.util.Map, org.apache.dubbo.common.extension.LoadingStrategy, java.lang.String)}
+     * 中调用
+     * </p>
+     *
+     * @param extensionClasses
+     * @param overridden
+     * @param urls
+     * @param classLoader
+     * @param includedPackages
+     * @param excludedPackages
+     * @param onlyExtensionClassLoaderPackages
+     */
     private void loadFromClass(Map<String, Class<?>> extensionClasses,
                                boolean overridden,
                                Set<java.net.URL> urls,
@@ -1472,6 +1553,13 @@ public class ExtensionLoader<T> {
                     + clazz.getName() + "), class " + clazz.getName() + " is not subtype of interface.");
         }
 
+        /**
+         * 呃，这个地方很重要。
+         * 像{@link org.apache.dubbo.common.extension.ExtensionInjector}
+         * 实现类中的{@link AdaptiveExtensionInjector} 有注解{@link Adaptive}
+         * 那么在方法{@link ExtensionLoader#cacheAdaptiveClass(java.lang.Class, boolean)}
+         * 中会将{@link ExtensionLoader#cachedAdaptiveClass}设置为该 clazz
+         */
         boolean isActive = loadClassIfActive(classLoader, clazz);
 
         if (!isActive) {
@@ -1742,6 +1830,11 @@ public class ExtensionLoader<T> {
      */
     private Class<?> getAdaptiveExtensionClass() {
         getExtensionClasses();
+        /**
+         * 这个地方要特别关注一下{@link ExtensionLoader#loadClass(java.lang.ClassLoader, java.util.Map, java.net.URL, java.lang.Class, java.lang.String, boolean)}
+         * 方法，会设置这个地方的cachedAdaptiveClass。
+         * 所以，如果是{@link ExtensionInjector},这个地方返回的是{@link AdaptiveExtensionInjector}
+         */
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }

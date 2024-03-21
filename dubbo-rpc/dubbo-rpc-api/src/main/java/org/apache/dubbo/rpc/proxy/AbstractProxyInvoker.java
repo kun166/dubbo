@@ -30,6 +30,7 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CompletableFuture;
@@ -42,6 +43,7 @@ import static org.apache.dubbo.common.constants.LoggerCodeConstants.PROXY_ERROR_
  * This Invoker works on provider side, delegates RPC to interface implementation.
  */
 public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
+
     ErrorTypeAwareLogger logger = LoggerFactory.getErrorTypeAwareLogger(AbstractProxyInvoker.class);
 
     private final T proxy;
@@ -50,6 +52,15 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
 
     private final URL url;
 
+    /**
+     * <p>
+     * {@link JavassistProxyFactory#getInvoker(java.lang.Object, java.lang.Class, org.apache.dubbo.common.URL)}
+     * </p>
+     *
+     * @param proxy 真正实现功能的类
+     * @param type  接口
+     * @param url   传递参数的url
+     */
     public AbstractProxyInvoker(T proxy, Class<T> type, URL url) {
         if (proxy == null) {
             throw new IllegalArgumentException("proxy == null");
@@ -81,8 +92,16 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     }
 
     @Override
-    public void destroy() {}
+    public void destroy() {
+    }
 
+    /**
+     * 接口方法，重要
+     *
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         ProfilerEntry originEntry = null;
@@ -91,14 +110,14 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
                 Object fromInvocation = invocation.get(Profiler.PROFILER_KEY);
                 if (fromInvocation instanceof ProfilerEntry) {
                     ProfilerEntry profiler = Profiler.enter(
-                            (ProfilerEntry) fromInvocation, "Receive request. Server biz impl invoke begin.");
+                        (ProfilerEntry) fromInvocation, "Receive request. Server biz impl invoke begin.");
                     invocation.put(Profiler.PROFILER_KEY, profiler);
                     originEntry = Profiler.setToBizProfiler(profiler);
                 }
             }
 
             Object value = doInvoke(
-                    proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
+                proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
 
             CompletableFuture<Object> future = wrapWithFuture(value, invocation);
             CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {
@@ -117,20 +136,20 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
             return new AsyncRpcResult(appResponseFuture, invocation);
         } catch (InvocationTargetException e) {
             if (RpcContext.getServiceContext().isAsyncStarted()
-                    && !RpcContext.getServiceContext().stopAsync()) {
+                && !RpcContext.getServiceContext().stopAsync()) {
                 logger.error(
-                        PROXY_ERROR_ASYNC_RESPONSE,
-                        "",
-                        "",
-                        "Provider async started, but got an exception from the original method, cannot write the exception back to consumer because an async result may have returned the new thread.",
-                        e);
+                    PROXY_ERROR_ASYNC_RESPONSE,
+                    "",
+                    "",
+                    "Provider async started, but got an exception from the original method, cannot write the exception back to consumer because an async result may have returned the new thread.",
+                    e);
             }
             return AsyncRpcResult.newDefaultAsyncResult(null, e.getTargetException(), invocation);
         } catch (Throwable e) {
             throw new RpcException(
-                    "Failed to invoke remote proxy method " + invocation.getMethodName() + " to " + getUrl()
-                            + ", cause: " + e.getMessage(),
-                    e);
+                "Failed to invoke remote proxy method " + invocation.getMethodName() + " to " + getUrl()
+                    + ", cause: " + e.getMessage(),
+                e);
         } finally {
             if (ProfilerSwitch.isEnableSimpleProfiler()) {
                 Object fromInvocation = invocation.get(Profiler.PROFILER_KEY);
@@ -158,7 +177,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     }
 
     protected abstract Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments)
-            throws Throwable;
+        throws Throwable;
 
     @Override
     public String toString() {

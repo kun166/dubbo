@@ -19,6 +19,7 @@ package org.apache.dubbo.config.metadata;
 import org.apache.dubbo.common.deploy.ApplicationDeployListener;
 import org.apache.dubbo.common.lang.Prioritized;
 import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.config.deploy.DefaultApplicationDeployer;
 import org.apache.dubbo.registry.client.metadata.MetadataServiceDelegation;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 
@@ -31,22 +32,26 @@ public class ExporterDeployListener implements ApplicationDeployListener, Priori
     protected volatile ConfigurableMetadataServiceExporter metadataServiceExporter;
 
     @Override
-    public void onInitialize(ApplicationModel scopeModel) {}
+    public void onInitialize(ApplicationModel scopeModel) {
+    }
 
     @Override
-    public void onStarting(ApplicationModel scopeModel) {}
+    public void onStarting(ApplicationModel scopeModel) {
+    }
 
     @Override
-    public synchronized void onStarted(ApplicationModel applicationModel) {}
+    public synchronized void onStarted(ApplicationModel applicationModel) {
+    }
 
     @Override
-    public synchronized void onStopping(ApplicationModel scopeModel) {}
+    public synchronized void onStopping(ApplicationModel scopeModel) {
+    }
 
     private String getMetadataType(ApplicationModel applicationModel) {
         String type = applicationModel
-                .getApplicationConfigManager()
-                .getApplicationOrElseThrow()
-                .getMetadataType();
+            .getApplicationConfigManager()
+            .getApplicationOrElseThrow()
+            .getMetadataType();
         if (StringUtils.isEmpty(type)) {
             type = DEFAULT_METADATA_STORAGE_TYPE;
         }
@@ -55,9 +60,9 @@ public class ExporterDeployListener implements ApplicationDeployListener, Priori
 
     private String getRegisterMode(ApplicationModel applicationModel) {
         String type = applicationModel
-                .getApplicationConfigManager()
-                .getApplicationOrElseThrow()
-                .getRegisterMode();
+            .getApplicationConfigManager()
+            .getApplicationOrElseThrow()
+            .getRegisterMode();
         if (StringUtils.isEmpty(type)) {
             type = DEFAULT_REGISTER_MODE;
         }
@@ -72,16 +77,23 @@ public class ExporterDeployListener implements ApplicationDeployListener, Priori
         this.metadataServiceExporter = metadataServiceExporter;
     }
 
+    /**
+     * <p>
+     * {@link DefaultApplicationDeployer#exportMetadataService()}中调用
+     * </p>
+     *
+     * @param applicationModel
+     */
     @Override
     public synchronized void onModuleStarted(ApplicationModel applicationModel) {
         // start metadata service exporter
         MetadataServiceDelegation metadataService =
-                applicationModel.getBeanFactory().getOrRegisterBean(MetadataServiceDelegation.class);
+            applicationModel.getBeanFactory().getOrRegisterBean(MetadataServiceDelegation.class);
         if (metadataServiceExporter == null) {
             metadataServiceExporter = new ConfigurableMetadataServiceExporter(applicationModel, metadataService);
             // fixme, let's disable local metadata service export at this moment
             if (!REMOTE_METADATA_STORAGE_TYPE.equals(getMetadataType(applicationModel))
-                    && !INTERFACE_REGISTER_MODE.equals(getRegisterMode(applicationModel))) {
+                && !INTERFACE_REGISTER_MODE.equals(getRegisterMode(applicationModel))) {
                 metadataServiceExporter.export();
             }
         }
@@ -99,7 +111,8 @@ public class ExporterDeployListener implements ApplicationDeployListener, Priori
     }
 
     @Override
-    public void onFailure(ApplicationModel scopeModel, Throwable cause) {}
+    public void onFailure(ApplicationModel scopeModel, Throwable cause) {
+    }
 
     @Override
     public int getPriority() {

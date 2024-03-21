@@ -43,6 +43,7 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.config.*;
 import org.apache.dubbo.config.context.ConfigManager;
+import org.apache.dubbo.config.metadata.ExporterDeployListener;
 import org.apache.dubbo.config.utils.CompositeReferenceCache;
 import org.apache.dubbo.config.utils.ConfigValidationUtils;
 import org.apache.dubbo.metadata.report.MetadataReportFactory;
@@ -1435,6 +1436,11 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         for (DeployListener<ApplicationModel> listener : listeners) {
             try {
                 if (listener instanceof ApplicationDeployListener) {
+                    /**
+                     * <p>
+                     * {@link ExporterDeployListener#onModuleStarted(org.apache.dubbo.rpc.model.ApplicationModel)}
+                     * </p>
+                     */
                     ((ApplicationDeployListener) listener).onModuleStarted(applicationModel);
                 }
             } catch (Throwable e) {

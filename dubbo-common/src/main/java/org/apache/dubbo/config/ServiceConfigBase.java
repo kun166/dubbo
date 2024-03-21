@@ -227,6 +227,12 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return metaData;
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#checkAndUpdateSubConfigs()}
+     * 中调用
+     * </p>
+     */
     protected void checkProtocol() {
         if (provider != null && notHasSelfProtocolProperty()) {
             setProtocols(provider.getProtocols());
@@ -270,6 +276,11 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         }
     }
 
+    /**
+     * <p>
+     * {@link ServiceConfigBase#checkProtocol()}中调用
+     * </p>
+     */
     protected void convertProtocolIdsToProtocols() {
         if (StringUtils.isEmpty(protocolIds)) {
             if (CollectionUtils.isEmpty(protocols)) {

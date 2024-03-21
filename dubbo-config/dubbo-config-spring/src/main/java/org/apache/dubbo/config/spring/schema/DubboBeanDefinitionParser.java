@@ -231,6 +231,14 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                          * 1. Spring, check existing bean by id, see{@link ServiceBean#afterPropertiesSet()}; then try to use id to find configs defined in remote Config Center
                          * 2. API, directly use id to find configs defined in remote Config Center; if all config instances are defined locally, please use {@link org.apache.dubbo.config.ServiceConfig#setRegistries(List)}
                          */
+                        /**
+                         * 这个地方要注意,如果满足下面任意一个条件:
+                         * 1,beanProperty为provider
+                         * 2,beanProperty为registry
+                         * 3,beanProperty为protocol,且解析的类为{@link AbstractServiceConfig}的子类
+                         * 则调用的方法为 beanProperty+"Ids"
+                         * 如{@link AbstractServiceConfig#setProtocolIds(java.lang.String)}
+                         */
                         beanDefinition.getPropertyValues().addPropertyValue(beanProperty + "Ids", value);
                     } else {
                         Object reference;

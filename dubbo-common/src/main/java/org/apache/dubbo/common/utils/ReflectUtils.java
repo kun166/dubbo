@@ -52,6 +52,7 @@ import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.NotFoundException;
+import org.apache.dubbo.common.bytecode.Wrapper;
 import org.apache.dubbo.rpc.model.ReflectionMethodDescriptor;
 
 import static java.util.Arrays.asList;
@@ -432,6 +433,10 @@ public final class ReflectUtils {
      * int do(int arg1) => "do(I)I"
      * void do(String arg1,boolean arg2) => "do(Ljava/lang/String;Z)V"
      *
+     * <p>
+     * {@link Wrapper#makeWrapper(java.lang.Class)}中调用
+     * </p>
+     *
      * @param m method.
      * @return desc.
      */
@@ -495,6 +500,10 @@ public final class ReflectUtils {
      * Object.class => "Ljava/lang/Object;"
      * boolean[].class => "[Z"
      *
+     * <p>
+     * {@link ReflectUtils#getDesc(javassist.CtMethod)}中调用
+     * </p>
+     *
      * @param c class.
      * @return desc.
      * @throws NotFoundException
@@ -502,30 +511,45 @@ public final class ReflectUtils {
     public static String getDesc(final CtClass c) throws NotFoundException {
         StringBuilder ret = new StringBuilder();
         if (c.isArray()) {
+            /**
+             * 如果是数组，则前面加[
+             */
             ret.append('[');
             ret.append(getDesc(c.getComponentType()));
         } else if (c.isPrimitive()) {
+            /**
+             * 8种基本数据类型
+             */
             String t = c.getName();
             if ("void".equals(t)) {
+                // V
                 ret.append(JVM_VOID);
             } else if ("boolean".equals(t)) {
+                // Z
                 ret.append(JVM_BOOLEAN);
             } else if ("byte".equals(t)) {
                 ret.append(JVM_BYTE);
+                // B
             } else if ("char".equals(t)) {
                 ret.append(JVM_CHAR);
             } else if ("double".equals(t)) {
+                // D
                 ret.append(JVM_DOUBLE);
             } else if ("float".equals(t)) {
+                // F
                 ret.append(JVM_FLOAT);
             } else if ("int".equals(t)) {
+                // I
                 ret.append(JVM_INT);
             } else if ("long".equals(t)) {
+                // J
                 ret.append(JVM_LONG);
             } else if ("short".equals(t)) {
+                // S
                 ret.append(JVM_SHORT);
             }
         } else {
+            // 其它包装类，L,全类名用/替换，注意最后还有一个;
             ret.append('L');
             ret.append(c.getName().replace('.', '/'));
             ret.append(';');
@@ -537,15 +561,22 @@ public final class ReflectUtils {
      * get method desc.
      * "do(I)I", "do()V", "do(Ljava/lang/String;Z)V"
      *
+     * <p>
+     * {@link Wrapper#makeWrapper(java.lang.Class)}中调用
+     * </p>
+     *
      * @param m method.
      * @return desc.
      */
     public static String getDesc(final CtMethod m) throws NotFoundException {
+        // 先记录方法名称
         StringBuilder ret = new StringBuilder(m.getName()).append('(');
+        // 方法参数类型
         CtClass[] parameterTypes = m.getParameterTypes();
         for (CtClass parameterType : parameterTypes) {
             ret.append(getDesc(parameterType));
         }
+        // 加)之后再加返回类型
         ret.append(')').append(getDesc(m.getReturnType()));
         return ret.toString();
     }

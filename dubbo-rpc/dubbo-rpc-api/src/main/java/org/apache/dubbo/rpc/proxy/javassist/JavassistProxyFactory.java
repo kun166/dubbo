@@ -36,7 +36,7 @@ import static org.apache.dubbo.common.constants.LoggerCodeConstants.PROXY_FAILED
  */
 public class JavassistProxyFactory extends AbstractProxyFactory {
     private static final ErrorTypeAwareLogger logger =
-            LoggerFactory.getErrorTypeAwareLogger(JavassistProxyFactory.class);
+        LoggerFactory.getErrorTypeAwareLogger(JavassistProxyFactory.class);
     private final JdkProxyFactory jdkProxyFactory = new JdkProxyFactory();
 
     @Override
@@ -49,43 +49,60 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
             try {
                 T proxy = jdkProxyFactory.getProxy(invoker, interfaces);
                 logger.error(
-                        PROXY_FAILED,
-                        "",
-                        "",
-                        "Failed to generate proxy by Javassist failed. Fallback to use JDK proxy success. "
-                                + "Interfaces: " + Arrays.toString(interfaces),
-                        fromJavassist);
+                    PROXY_FAILED,
+                    "",
+                    "",
+                    "Failed to generate proxy by Javassist failed. Fallback to use JDK proxy success. "
+                        + "Interfaces: " + Arrays.toString(interfaces),
+                    fromJavassist);
                 return proxy;
             } catch (Throwable fromJdk) {
                 logger.error(
-                        PROXY_FAILED,
-                        "",
-                        "",
-                        "Failed to generate proxy by Javassist failed. Fallback to use JDK proxy is also failed. "
-                                + "Interfaces: " + Arrays.toString(interfaces) + " Javassist Error.",
-                        fromJavassist);
+                    PROXY_FAILED,
+                    "",
+                    "",
+                    "Failed to generate proxy by Javassist failed. Fallback to use JDK proxy is also failed. "
+                        + "Interfaces: " + Arrays.toString(interfaces) + " Javassist Error.",
+                    fromJavassist);
                 logger.error(
-                        PROXY_FAILED,
-                        "",
-                        "",
-                        "Failed to generate proxy by Javassist failed. Fallback to use JDK proxy is also failed. "
-                                + "Interfaces: " + Arrays.toString(interfaces) + " JDK Error.",
-                        fromJdk);
+                    PROXY_FAILED,
+                    "",
+                    "",
+                    "Failed to generate proxy by Javassist failed. Fallback to use JDK proxy is also failed. "
+                        + "Interfaces: " + Arrays.toString(interfaces) + " JDK Error.",
+                    fromJdk);
                 throw fromJavassist;
             }
         }
     }
 
+    /**
+     * <p>
+     * {@link org.apache.dubbo.config.ServiceConfig#doExportUrl(org.apache.dubbo.common.URL, boolean, org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param proxy
+     * @param type
+     * @param url
+     * @param <T>
+     * @return
+     */
     @Override
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
         try {
             // TODO Wrapper cannot handle this scenario correctly: the classname contains '$'
+            /**
+             * 如果是spring aop bean,则取接口。否则取实例的class
+             */
             final Wrapper wrapper =
-                    Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+                Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+
             return new AbstractProxyInvoker<T>(proxy, type, url) {
                 @Override
-                protected Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments)
-                        throws Throwable {
+                protected Object doInvoke(T proxy, String methodName,
+                                          Class<?>[] parameterTypes,
+                                          Object[] arguments) throws Throwable {
                     return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
                 }
             };
@@ -94,29 +111,29 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
             try {
                 Invoker<T> invoker = jdkProxyFactory.getInvoker(proxy, type, url);
                 logger.error(
-                        PROXY_FAILED,
-                        "",
-                        "",
-                        "Failed to generate invoker by Javassist failed. Fallback to use JDK proxy success. "
-                                + "Interfaces: " + type,
-                        fromJavassist);
+                    PROXY_FAILED,
+                    "",
+                    "",
+                    "Failed to generate invoker by Javassist failed. Fallback to use JDK proxy success. "
+                        + "Interfaces: " + type,
+                    fromJavassist);
                 // log out error
                 return invoker;
             } catch (Throwable fromJdk) {
                 logger.error(
-                        PROXY_FAILED,
-                        "",
-                        "",
-                        "Failed to generate invoker by Javassist failed. Fallback to use JDK proxy is also failed. "
-                                + "Interfaces: " + type + " Javassist Error.",
-                        fromJavassist);
+                    PROXY_FAILED,
+                    "",
+                    "",
+                    "Failed to generate invoker by Javassist failed. Fallback to use JDK proxy is also failed. "
+                        + "Interfaces: " + type + " Javassist Error.",
+                    fromJavassist);
                 logger.error(
-                        PROXY_FAILED,
-                        "",
-                        "",
-                        "Failed to generate invoker by Javassist failed. Fallback to use JDK proxy is also failed. "
-                                + "Interfaces: " + type + " JDK Error.",
-                        fromJdk);
+                    PROXY_FAILED,
+                    "",
+                    "",
+                    "Failed to generate invoker by Javassist failed. Fallback to use JDK proxy is also failed. "
+                        + "Interfaces: " + type + " JDK Error.",
+                    fromJdk);
                 throw fromJavassist;
             }
         }

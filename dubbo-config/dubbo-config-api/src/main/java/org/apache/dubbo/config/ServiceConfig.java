@@ -414,6 +414,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         ExecutorRepository.getInstance(getScopeModel().getApplicationModel())
             .getServiceExportExecutor()
             .schedule(
+                // 只会执行一次
                 () -> {
                     try {
                         doExport(RegisterTypeEnum.AUTO_REGISTER);
@@ -650,6 +651,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // &release=3.2.9&timestamp=1710409161178
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
+
+        // <dubbo:protocol preferSerialization="fastjson2,hessian2" port="-1" name="dubbo" />
         for (ProtocolConfig protocolConfig : protocols) {
             // demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0
             String pathKey = URL.buildKey(
@@ -1030,6 +1033,17 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         this.urls.add(url);
     }
 
+    /**
+     * <p>
+     * {@link ServiceConfig#exportUrl(org.apache.dubbo.common.URL, java.util.List, org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param url
+     * @param registryURLs
+     * @param registerType
+     * @return
+     */
     private URL exportRemote(URL url, List<URL> registryURLs, RegisterTypeEnum registerType) {
         if (CollectionUtils.isNotEmpty(registryURLs) && registerType != RegisterTypeEnum.NEVER_REGISTER) {
             for (URL registryURL : registryURLs) {
@@ -1081,6 +1095,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     /**
      * <p>
      * {@link ServiceConfig#exportLocal(org.apache.dubbo.common.URL)}中调用
+     * {@link ServiceConfig#exportRemote(org.apache.dubbo.common.URL, java.util.List, org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
      * </p>
      *
      * @param url          暴露的url
@@ -1107,11 +1123,27 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
          * javassist={@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory}
          * bytebuddy={@link org.apache.dubbo.rpc.proxy.bytebuddy.ByteBuddyProxyFactory}
          * nativestub={@link org.apache.dubbo.rpc.stub.StubProxyFactory}
+         *
+         * 下面这个proxyFactory默认是javassist
          */
         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);
         if (withMetaData) {
             invoker = new DelegateProviderMetaDataInvoker(invoker, this);
         }
+        /**
+         * listener={@link org.apache.dubbo.rpc.protocol.ProtocolListenerWrapper}
+         * mock={@link org.apache.dubbo.rpc.support.MockProtocol}
+         * serializationwrapper={@link org.apache.dubbo.rpc.protocol.ProtocolSerializationWrapper}
+         * securitywrapper={@link org.apache.dubbo.rpc.protocol.ProtocolSecurityWrapper}
+         * invokercount={@link org.apache.dubbo.rpc.protocol.InvokerCountWrapper}
+         * registry={@link org.apache.dubbo.registry.integration.InterfaceCompatibleRegistryProtocol}
+         * service-discovery-registry={@link org.apache.dubbo.registry.integration.RegistryProtocol}
+         * injvm={@link org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol}
+         *
+         *
+         * 内部暴露用的是injvm
+         * 外部用service-discovery-registry或者registry
+         */
         Exporter<?> exporter = protocolSPI.export(invoker);
         exporters
             .computeIfAbsent(registerType, k -> new CopyOnWriteArrayList<>())
@@ -1127,6 +1159,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      */
     private void exportLocal(URL url) {
         URL local = URLBuilder.from(url)
+            /**
+             * 这个参数很重要
+             */
             .setProtocol(LOCAL_PROTOCOL)
             .setHost(LOCALHOST_VALUE)
             .setPort(0)

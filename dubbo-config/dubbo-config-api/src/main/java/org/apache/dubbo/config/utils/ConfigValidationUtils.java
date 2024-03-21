@@ -20,12 +20,14 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.URLBuilder;
 import org.apache.dubbo.common.config.ConfigurationUtils;
 import org.apache.dubbo.common.config.PropertiesConfiguration;
+import org.apache.dubbo.common.constants.RegistryConstants;
 import org.apache.dubbo.common.logger.ErrorTypeAwareLogger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.serialize.Serialization;
 import org.apache.dubbo.common.status.StatusChecker;
 import org.apache.dubbo.common.status.reporter.FrameworkStatusReportService;
 import org.apache.dubbo.common.threadpool.ThreadPool;
+import org.apache.dubbo.common.url.component.ServiceConfigURL;
 import org.apache.dubbo.common.utils.ClassUtils;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.ConfigUtils;
@@ -65,6 +67,7 @@ import org.apache.dubbo.rpc.ProxyFactory;
 import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.LoadBalance;
 import org.apache.dubbo.rpc.cluster.filter.ClusterFilter;
+import org.apache.dubbo.rpc.model.ModuleModel;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelUtil;
 import org.apache.dubbo.rpc.support.MockInvoker;
@@ -230,6 +233,9 @@ public class ConfigValidationUtils {
                     // zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?
                     // REGISTRY_CLUSTER=registry1&application=demo-provider&dubbo=2.0.2&executor-management-mode=isolation
                     // &file-cache=true&pid=22422&registry-type=service&registry.type=service&release=3.2.9&timestamp=1710409161178
+                    /**
+                     * 返回的是{@link ServiceConfigURL#ServiceConfigURL(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int, java.lang.String, java.util.Map)}
+                     */
                     List<URL> urls = UrlUtils.parseURLs(address, map);
 
                     for (URL url : urls) {
@@ -239,7 +245,14 @@ public class ConfigValidationUtils {
                         // &release=3.2.9&timestamp=1710409161178
                         url = URLBuilder.from(url)
                             .addParameter(REGISTRY_KEY, url.getProtocol())
+                            /**
+                             * 这个地方,url参数中registry-type=service
+                             * 则protocol设置为{@link RegistryConstants#SERVICE_REGISTRY_PROTOCOL}
+                             */
                             .setProtocol(extractRegistryType(url))
+                            /**
+                             * 这里设置了{@link ModuleModel}
+                             */
                             .setScopeModel(interfaceConfig.getScopeModel())
                             .build();
                         // provider delay register state will be checked in RegistryProtocol#export
@@ -269,12 +282,16 @@ public class ConfigValidationUtils {
         registryList.forEach(registryURL -> {
             if (provider) {
                 // for registries enabled service discovery, automatically register interface compatible addresses.
+
                 // service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?
                 // REGISTRY_CLUSTER=registry1&application=demo-provider&dubbo=2.0.2&executor-management-mode=isolation
                 // &file-cache=true&pid=22422&registry=zookeeper&registry-type=service&registry.type=service
                 // &release=3.2.9&timestamp=1710409161178
                 String registerMode;
                 if (SERVICE_REGISTRY_PROTOCOL.equals(registryURL.getProtocol())) {
+                    /**
+                     * 取了默认值{@link RegistryConstants#DEFAULT_REGISTER_MODE_INSTANCE}
+                     */
                     registerMode = registryURL.getParameter(
                         REGISTER_MODE_KEY,
                         ConfigurationUtils.getCachedDynamicProperty(

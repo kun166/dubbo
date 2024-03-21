@@ -30,6 +30,15 @@ public class DelegateProviderMetaDataInvoker<T> implements Invoker {
     protected final Invoker<T> invoker;
     private final ServiceConfig<?> metadata;
 
+    /**
+     * <p>
+     * {@link ServiceConfig#doExportUrl(org.apache.dubbo.common.URL, boolean, org.apache.dubbo.common.constants.RegisterTypeEnum)}
+     * 中调用
+     * </p>
+     *
+     * @param invoker
+     * @param metadata
+     */
     public DelegateProviderMetaDataInvoker(Invoker<T> invoker, ServiceConfig<?> metadata) {
         this.invoker = invoker;
         this.metadata = metadata;

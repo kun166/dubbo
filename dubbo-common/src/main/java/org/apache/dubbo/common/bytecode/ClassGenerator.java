@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -64,8 +65,17 @@ public final class ClassGenerator {
     private Map<String, Constructor<?>> mCopyConstructors; // <constructor desc,constructor instance>
     private boolean mDefaultConstructor = false;
 
-    private ClassGenerator() {}
+    private ClassGenerator() {
+    }
 
+    /**
+     * <p>
+     * {@link ClassGenerator#newInstance(java.lang.ClassLoader)}中调用
+     * </p>
+     *
+     * @param classLoader
+     * @param pool
+     */
     private ClassGenerator(ClassLoader classLoader, ClassPool pool) {
         mClassLoader = classLoader;
         mPool = pool;
@@ -73,10 +83,18 @@ public final class ClassGenerator {
 
     public static ClassGenerator newInstance() {
         return new ClassGenerator(
-                Thread.currentThread().getContextClassLoader(),
-                getClassPool(Thread.currentThread().getContextClassLoader()));
+            Thread.currentThread().getContextClassLoader(),
+            getClassPool(Thread.currentThread().getContextClassLoader()));
     }
 
+    /**
+     * <p>
+     * {@link Wrapper#makeWrapper(java.lang.Class)}中调用
+     * </p>
+     *
+     * @param loader
+     * @return
+     */
     public static ClassGenerator newInstance(ClassLoader loader) {
         return new ClassGenerator(loader, getClassPool(loader));
     }
@@ -85,11 +103,22 @@ public final class ClassGenerator {
         return ClassGenerator.DC.class.isAssignableFrom(cl);
     }
 
+    /**
+     * <p>
+     * {@link ClassGenerator#newInstance(java.lang.ClassLoader)}中调用
+     * </p>
+     *
+     * @param loader
+     * @return
+     */
     public static ClassPool getClassPool(ClassLoader loader) {
         if (loader == null) {
             return ClassPool.getDefault();
         }
 
+        /**
+         * 注意，这个{@link ClassPool}是javassist的
+         */
         ClassPool pool = POOL_MAP.get(loader);
         if (pool == null) {
             synchronized (POOL_MAP) {
@@ -195,10 +224,10 @@ public final class ClassGenerator {
     public ClassGenerator addMethod(String name, int mod, Class<?> rt, Class<?>[] pts, Class<?>[] ets, String body) {
         StringBuilder sb = new StringBuilder();
         sb.append(modifier(mod))
-                .append(' ')
-                .append(ReflectUtils.getName(rt))
-                .append(' ')
-                .append(name);
+            .append(' ')
+            .append(ReflectUtils.getName(rt))
+            .append(' ')
+            .append(name);
         sb.append('(');
         if (ArrayUtils.isNotEmpty(pts)) {
             for (int i = 0; i < pts.length; i++) {
@@ -295,8 +324,12 @@ public final class ClassGenerator {
     }
 
     /**
-     * @param neighbor    A class belonging to the same package that this
-     *                    class belongs to.  It is used to load the class.
+     * <p>
+     * {@link Wrapper#makeWrapper(java.lang.Class)}中调用
+     * </p>
+     *
+     * @param neighbor A class belonging to the same package that this
+     *                 class belongs to.  It is used to load the class.
      */
     public Class<?> toClass(Class<?> neighbor) {
         return toClass(neighbor, mClassLoader, getClass().getProtectionDomain());
@@ -311,9 +344,9 @@ public final class ClassGenerator {
             CtClass ctcs = mSuperClass == null ? null : mPool.get(mSuperClass);
             if (mClassName == null) {
                 mClassName = (mSuperClass == null || javassist.Modifier.isPublic(ctcs.getModifiers())
-                                ? ClassGenerator.class.getName()
-                                : mSuperClass + "$sc")
-                        + id;
+                    ? ClassGenerator.class.getName()
+                    : mSuperClass + "$sc")
+                    + id;
             }
             mCtc = mPool.makeClass(mClassName);
             if (mSuperClass != null) {
@@ -334,10 +367,10 @@ public final class ClassGenerator {
                 for (String code : mMethods) {
                     if (code.charAt(0) == ':') {
                         mCtc.addMethod(CtNewMethod.copy(
-                                getCtMethod(mCopyMethods.get(code.substring(1))),
-                                code.substring(1, code.indexOf('(')),
-                                mCtc,
-                                null));
+                            getCtMethod(mCopyMethods.get(code.substring(1))),
+                            code.substring(1, code.indexOf('(')),
+                            mCtc,
+                            null));
                     } else {
                         mCtc.addMethod(CtNewMethod.make(code, mCtc));
                     }
@@ -350,11 +383,11 @@ public final class ClassGenerator {
                 for (String code : mConstructors) {
                     if (code.charAt(0) == ':') {
                         mCtc.addConstructor(CtNewConstructor.copy(
-                                getCtConstructor(mCopyConstructors.get(code.substring(1))), mCtc, null));
+                            getCtConstructor(mCopyConstructors.get(code.substring(1))), mCtc, null));
                     } else {
                         String[] sn = mCtc.getSimpleName().split("\\$+"); // inner class name include $.
                         mCtc.addConstructor(
-                                CtNewConstructor.make(code.replaceFirst(SIMPLE_NAME_TAG, sn[sn.length - 1]), mCtc));
+                            CtNewConstructor.make(code.replaceFirst(SIMPLE_NAME_TAG, sn[sn.length - 1]), mCtc));
                     }
                 }
             }
@@ -410,5 +443,6 @@ public final class ClassGenerator {
         return getCtClass(c.getDeclaringClass()).getConstructor(ReflectUtils.getDesc(c));
     }
 
-    public static interface DC {} // dynamic class tag interface.
+    public static interface DC {
+    } // dynamic class tag interface.
 }

@@ -43,6 +43,7 @@ public class InstantiationStrategy {
     /**
      * <p>
      * {@link ScopeBeanFactory#initInstantiationStrategy()}中调用
+     * 传参 {@link ScopeModelAwareExtensionProcessor}
      * </p>
      *
      * @param scopeModelAccessor
@@ -60,6 +61,7 @@ public class InstantiationStrategy {
      * <p>
      * {@link ScopeBeanFactory#createAndRegisterBean(java.lang.String, java.lang.Class)}
      * 中调用
+     * {@link ExtensionLoader#createExtensionInstance(java.lang.Class)}中调用
      * </p>
      *
      * @param type
