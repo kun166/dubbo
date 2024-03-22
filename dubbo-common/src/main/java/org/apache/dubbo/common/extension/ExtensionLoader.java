@@ -23,6 +23,7 @@ import org.apache.dubbo.common.compact.Dubbo2ActivateUtils;
 import org.apache.dubbo.common.compact.Dubbo2CompactUtils;
 import org.apache.dubbo.common.context.Lifecycle;
 import org.apache.dubbo.common.extension.inject.AdaptiveExtensionInjector;
+import org.apache.dubbo.common.extension.inject.SpiExtensionInjector;
 import org.apache.dubbo.common.extension.support.ActivateComparator;
 import org.apache.dubbo.common.extension.support.WrapperComparator;
 import org.apache.dubbo.common.lang.Prioritized;
@@ -680,6 +681,8 @@ public class ExtensionLoader<T> {
 
     /**
      * {@link ExtensionLoader#getSupportedExtensionInstances()}中调用
+     * {@link AdaptiveExtensionInjector#initialize()}中调用
+     * {@link SpiExtensionInjector#getInstance(java.lang.Class, java.lang.String)}中调用
      *
      * @return
      */
@@ -931,6 +934,16 @@ public class ExtensionLoader<T> {
         return instantiationStrategy.instantiate(type);
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#createExtension(java.lang.String, boolean)}中调用
+     * </p>
+     *
+     * @param instance
+     * @param name
+     * @return
+     * @throws Exception
+     */
     @SuppressWarnings("unchecked")
     private T postProcessBeforeInitialization(T instance, String name) throws Exception {
         if (extensionPostProcessors != null) {
@@ -941,6 +954,16 @@ public class ExtensionLoader<T> {
         return instance;
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#createExtension(java.lang.String, boolean)}中调用
+     * </p>
+     *
+     * @param instance
+     * @param name
+     * @return
+     * @throws Exception
+     */
     @SuppressWarnings("unchecked")
     private T postProcessAfterInitialization(T instance, String name) throws Exception {
         if (instance instanceof ExtensionAccessorAware) {
@@ -980,12 +1003,18 @@ public class ExtensionLoader<T> {
                  * Check {@link DisableInject} to see if we need auto-injection for this property
                  */
                 if (method.isAnnotationPresent(DisableInject.class)) {
+                    /**
+                     * 方法上没有标注{@link DisableInject}注解
+                     */
                     continue;
                 }
 
                 // When spiXXX implements ScopeModelAware, ExtensionAccessorAware,
                 // the setXXX of ScopeModelAware and ExtensionAccessorAware does not need to be injected
                 if (method.getDeclaringClass() == ScopeModelAware.class) {
+                    /**
+                     * 不是从{@link ScopeModelAware}继承来的方法
+                     */
                     continue;
                 }
                 if (instance instanceof ScopeModelAware || instance instanceof ExtensionAccessorAware) {
@@ -996,11 +1025,19 @@ public class ExtensionLoader<T> {
 
                 Class<?> pt = method.getParameterTypes()[0];
                 if (ReflectUtils.isPrimitives(pt)) {
+                    // 不能是8种基本类型
                     continue;
                 }
 
                 try {
+                    /**
+                     * 获取setXxx的xxx，首字母小写
+                     */
                     String property = getSetterProperty(method);
+                    /**
+                     * {@link AdaptiveExtensionInjector#getInstance(java.lang.Class, java.lang.String)}
+                     * 这个地方非常重要!!!
+                     */
                     Object object = injector.getInstance(pt, property);
                     if (object != null) {
                         method.invoke(instance, object);
@@ -1021,6 +1058,13 @@ public class ExtensionLoader<T> {
         return instance;
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#createAdaptiveExtension()}中调用
+     * </p>
+     *
+     * @param instance
+     */
     private void initExtension(T instance) {
         if (instance instanceof Lifecycle) {
             Lifecycle lifecycle = (Lifecycle) instance;
@@ -1030,7 +1074,11 @@ public class ExtensionLoader<T> {
 
     /**
      * get properties name for setter, for instance: setVersion, return "version"
+     * 获取setXXX方法的XXX,首字母小写
      * <p>
+     * <p>
+     * {@link ExtensionLoader#injectExtension(java.lang.Object)}中调用
+     * </p>
      * return "", if setter name with length less than 3
      */
     private String getSetterProperty(Method method) {
@@ -1811,6 +1859,9 @@ public class ExtensionLoader<T> {
         try {
             T instance = (T) getAdaptiveExtensionClass().newInstance();
             instance = postProcessBeforeInitialization(instance, null);
+            /**
+             * 这个方法很重要
+             */
             injectExtension(instance);
             instance = postProcessAfterInitialization(instance, null);
             initExtension(instance);

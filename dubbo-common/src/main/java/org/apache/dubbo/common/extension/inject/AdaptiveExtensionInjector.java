@@ -33,36 +33,65 @@ import java.util.stream.Collectors;
 @Adaptive
 public class AdaptiveExtensionInjector implements ExtensionInjector, Lifecycle {
 
+    /**
+     * <p>
+     * {@link AdaptiveExtensionInjector#initialize()}方法中赋值
+     * </p>
+     * adaptive={@link org.apache.dubbo.common.extension.inject.AdaptiveExtensionInjector}
+     * spi={@link org.apache.dubbo.common.extension.inject.SpiExtensionInjector}
+     * scopeBean={@link org.apache.dubbo.common.beans.ScopeBeanExtensionInjector}
+     */
     private Collection<ExtensionInjector> injectors = Collections.emptyList();
     private ExtensionAccessor extensionAccessor;
 
-    public AdaptiveExtensionInjector() {}
+    public AdaptiveExtensionInjector() {
+    }
 
     @Override
     public void setExtensionAccessor(final ExtensionAccessor extensionAccessor) {
         this.extensionAccessor = extensionAccessor;
     }
 
+    /**
+     * <p>
+     * 因为实现了{@link Lifecycle}接口
+     * {@link ExtensionLoader#initExtension(java.lang.Object)}中调用
+     * </p>
+     *
+     * @throws IllegalStateException
+     */
     @Override
     public void initialize() throws IllegalStateException {
         ExtensionLoader<ExtensionInjector> loader = extensionAccessor.getExtensionLoader(ExtensionInjector.class);
         injectors = loader.getSupportedExtensions().stream()
-                .map(loader::getExtension)
-                .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+            .map(loader::getExtension)
+            .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#injectExtension(java.lang.Object)}中调用
+     * </p>
+     *
+     * @param type object type. setXxx方法的参数类型
+     * @param name object name. setXxx方法的xxx，首字母小写
+     * @param <T>
+     * @return
+     */
     @Override
     public <T> T getInstance(final Class<T> type, final String name) {
         return injectors.stream()
-                .map(injector -> injector.getInstance(type, name))
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(null);
+            .map(injector -> injector.getInstance(type, name))
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(null);
     }
 
     @Override
-    public void start() throws IllegalStateException {}
+    public void start() throws IllegalStateException {
+    }
 
     @Override
-    public void destroy() throws IllegalStateException {}
+    public void destroy() throws IllegalStateException {
+    }
 }

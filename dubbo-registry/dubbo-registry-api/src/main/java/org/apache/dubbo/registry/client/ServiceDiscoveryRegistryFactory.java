@@ -31,6 +31,14 @@ public class ServiceDiscoveryRegistryFactory extends AbstractRegistryFactory {
         return url.toFullString();
     }
 
+    /**
+     * <p>
+     * {@link AbstractRegistryFactory#getRegistry(org.apache.dubbo.common.URL)}中调用
+     * </p>
+     *
+     * @param url
+     * @return
+     */
     @Override
     protected Registry createRegistry(URL url) {
         if (UrlUtils.hasServiceDiscoveryRegistryProtocol(url)) {

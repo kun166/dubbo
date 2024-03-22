@@ -25,6 +25,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ExporterFactory {
     private final Map<String, ReferenceCountExporter<?>> exporters = new ConcurrentHashMap<>();
 
+    /**
+     * <p>
+     * {@link RegistryProtocol#doLocalExport(org.apache.dubbo.rpc.Invoker, org.apache.dubbo.common.URL)}中调用
+     * </p>
+     *
+     * @param providerKey
+     * @param exporterProducer
+     * @return
+     */
     protected ReferenceCountExporter<?> createExporter(String providerKey, Callable<Exporter<?>> exporterProducer) {
         return exporters.computeIfAbsent(providerKey, key -> {
             try {

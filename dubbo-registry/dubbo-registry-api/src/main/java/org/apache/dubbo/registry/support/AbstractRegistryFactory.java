@@ -23,6 +23,7 @@ import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.registry.Registry;
 import org.apache.dubbo.registry.RegistryFactory;
 import org.apache.dubbo.registry.RegistryService;
+import org.apache.dubbo.registry.integration.RegistryProtocol;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.ScopeModelAware;
 
@@ -41,7 +42,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 public abstract class AbstractRegistryFactory implements RegistryFactory, ScopeModelAware {
 
     private static final ErrorTypeAwareLogger LOGGER =
-            LoggerFactory.getErrorTypeAwareLogger(AbstractRegistryFactory.class);
+        LoggerFactory.getErrorTypeAwareLogger(AbstractRegistryFactory.class);
 
     private RegistryManager registryManager;
     protected ApplicationModel applicationModel;
@@ -52,11 +53,19 @@ public abstract class AbstractRegistryFactory implements RegistryFactory, ScopeM
         this.registryManager = applicationModel.getBeanFactory().getBean(RegistryManager.class);
     }
 
+    /**
+     * <p>
+     * {@link RegistryProtocol#getRegistry(org.apache.dubbo.common.URL)}中调用
+     * </p>
+     *
+     * @param url Registry address, is not allowed to be empty
+     * @return
+     */
     @Override
     public Registry getRegistry(URL url) {
         if (registryManager == null) {
             throw new IllegalStateException("Unable to fetch RegistryManager from ApplicationModel BeanFactory. "
-                    + "Please check if `setApplicationModel` has been override.");
+                + "Please check if `setApplicationModel` has been override.");
         }
 
         Registry defaultNopRegistry = registryManager.getDefaultNopRegistryIfDestroyed();
@@ -65,12 +74,12 @@ public abstract class AbstractRegistryFactory implements RegistryFactory, ScopeM
         }
 
         url = URLBuilder.from(url)
-                .setPath(RegistryService.class.getName())
-                .addParameter(INTERFACE_KEY, RegistryService.class.getName())
-                .removeParameter(TIMESTAMP_KEY)
-                .removeAttribute(EXPORT_KEY)
-                .removeAttribute(REFER_KEY)
-                .build();
+            .setPath(RegistryService.class.getName())
+            .addParameter(INTERFACE_KEY, RegistryService.class.getName())
+            .removeParameter(TIMESTAMP_KEY)
+            .removeAttribute(EXPORT_KEY)
+            .removeAttribute(REFER_KEY)
+            .build();
 
         String key = createRegistryCacheKey(url);
         Registry registry = null;

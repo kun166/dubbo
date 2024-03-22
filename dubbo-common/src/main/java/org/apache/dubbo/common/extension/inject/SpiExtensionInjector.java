@@ -16,16 +16,16 @@
  */
 package org.apache.dubbo.common.extension.inject;
 
-import org.apache.dubbo.common.extension.ExtensionAccessor;
-import org.apache.dubbo.common.extension.ExtensionInjector;
-import org.apache.dubbo.common.extension.ExtensionLoader;
-import org.apache.dubbo.common.extension.SPI;
+import org.apache.dubbo.common.extension.*;
 
 /**
  * SpiExtensionInjector
  */
 public class SpiExtensionInjector implements ExtensionInjector {
 
+    /**
+     * 打断点，这个地方是{@link ExtensionDirector}
+     */
     private ExtensionAccessor extensionAccessor;
 
     @Override

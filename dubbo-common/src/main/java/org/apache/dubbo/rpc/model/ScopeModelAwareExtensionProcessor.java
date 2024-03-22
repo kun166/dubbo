@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc.model;
 
+import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.extension.ExtensionPostProcessor;
 
 public class ScopeModelAwareExtensionProcessor implements ExtensionPostProcessor, ScopeModelAccessor {
@@ -76,6 +77,16 @@ public class ScopeModelAwareExtensionProcessor implements ExtensionPostProcessor
         }
     }
 
+    /**
+     * <p>
+     * {@link ExtensionLoader#postProcessAfterInitialization(java.lang.Object, java.lang.String)}中调用
+     * </p>
+     *
+     * @param instance
+     * @param name
+     * @return
+     * @throws Exception
+     */
     @Override
     public Object postProcessAfterInitialization(Object instance, String name) throws Exception {
         if (instance instanceof ScopeModelAware) {
