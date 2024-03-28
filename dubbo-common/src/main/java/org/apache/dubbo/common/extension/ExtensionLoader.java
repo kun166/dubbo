@@ -881,11 +881,24 @@ public class ExtensionLoader<T> {
                 extensionInstances.putIfAbsent(clazz, createExtensionInstance(clazz));
                 instance = (T) extensionInstances.get(clazz);
                 instance = postProcessBeforeInitialization(instance, name);
+                /**
+                 * 这个方法很重要
+                 */
                 injectExtension(instance);
                 instance = postProcessAfterInitialization(instance, name);
             }
 
             if (wrap) {
+                /**
+                 * 下面逻辑很重要
+                 * 以{@link org.apache.dubbo.rpc.Protocol}为例:
+                 * 有如下几个包装类
+                 * {@link org.apache.dubbo.rpc.protocol.InvokerCountWrapper}
+                 * {@link org.apache.dubbo.rpc.protocol.ProtocolSerializationWrapper}
+                 * {@link org.apache.dubbo.rpc.protocol.ProtocolListenerWrapper}
+                 * {@link org.apache.dubbo.rpc.protocol.ProtocolSecurityWrapper}
+                 * {@link org.apache.dubbo.qos.protocol.QosProtocolWrapper}
+                 */
                 List<Class<?>> wrapperClassesList = new ArrayList<>();
                 if (cachedWrapperClasses != null) {
                     wrapperClassesList.addAll(cachedWrapperClasses);
@@ -1615,8 +1628,15 @@ public class ExtensionLoader<T> {
         }
 
         if (clazz.isAnnotationPresent(Adaptive.class)) {
+            /**
+             * 很重要
+             */
             cacheAdaptiveClass(clazz, overridden);
         } else if (isWrapperClass(clazz)) {
+            /**
+             * 很重要
+             * 进入这个条件的逻辑就是，有一个只有一个参数的构造器，且该构造器是{@link ExtensionLoader#type}
+             */
             cacheWrapperClass(clazz);
         } else {
             if (StringUtils.isEmpty(name)) {
