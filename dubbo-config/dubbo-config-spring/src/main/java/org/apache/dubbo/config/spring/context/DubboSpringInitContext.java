@@ -29,11 +29,21 @@ import org.springframework.context.ApplicationContext;
 
 /**
  * Dubbo spring initialization context object
+ * <p>
+ * dubbo的上下文对象
  */
 public class DubboSpringInitContext {
 
+    /**
+     * 在{@link DubboSpringInitializer#initContext(DubboSpringInitContext, BeanDefinitionRegistry, ConfigurableListableBeanFactory)}
+     * 中被赋值
+     */
     private BeanDefinitionRegistry registry;
 
+    /**
+     * 在{@link DubboSpringInitializer#initContext(DubboSpringInitContext, BeanDefinitionRegistry, ConfigurableListableBeanFactory)}
+     * 中被赋值
+     */
     private ConfigurableListableBeanFactory beanFactory;
 
     private ApplicationContext applicationContext;

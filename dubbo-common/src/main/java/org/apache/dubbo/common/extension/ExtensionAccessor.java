@@ -16,14 +16,27 @@
  */
 package org.apache.dubbo.common.extension;
 
+import org.apache.dubbo.rpc.model.ScopeModel;
+
 /**
  * Uniform accessor for extension
  */
 public interface ExtensionAccessor {
 
+    /**
+     * 在实现类中给与了{@link ScopeModel#extensionDirector}
+     * 然后实例化的时候是在{@link ScopeModel#initialize()}
+     * 具体实例化的值是{@link ExtensionDirector#ExtensionDirector(ExtensionDirector, ExtensionScope, ScopeModel)}
+     *
+     * @return
+     */
     ExtensionDirector getExtensionDirector();
 
     default <T> ExtensionLoader<T> getExtensionLoader(Class<T> type) {
+
+        /**
+         * 实际上调用的就是{@link ExtensionDirector#getExtensionLoader(Class)}了
+         */
         return this.getExtensionDirector().getExtensionLoader(type);
     }
 

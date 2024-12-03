@@ -111,6 +111,11 @@ public class ExtensionLoader<T> {
 
     private final ConcurrentMap<Class<?>, Object> extensionInstances = new ConcurrentHashMap<>(64);
 
+    /**
+     * 标有注解{@link SPI}的接口的class
+     * 可以说，它相当于表的主键，其它方法都围绕它来服务
+     * {@link ExtensionLoader#ExtensionLoader(Class, ExtensionDirector, ScopeModel)}构造器中赋值
+     */
     private final Class<?> type;
 
     /**
@@ -118,11 +123,24 @@ public class ExtensionLoader<T> {
      * {@link ExtensionLoader#ExtensionLoader(java.lang.Class, org.apache.dubbo.common.extension.ExtensionDirector, org.apache.dubbo.rpc.model.ScopeModel)}
      * 构造函数中赋值{@link AdaptiveExtensionInjector}
      * </p>
+     * <p>
+     * 如果{@link }是{@link ExtensionInjector},此值为null。
      */
     private final ExtensionInjector injector;
 
+    /**
+     * {@link ExtensionLoader#cacheName(Class, String)}中添加值
+     */
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<>();
 
+    /**
+     * {@link ExtensionLoader#getExtensionClasses()}方法中赋值
+     * 简单点来说,就是根据{@link ExtensionLoader#type}和下面的三个策略,
+     * {@link DubboInternalLoadingStrategy}
+     * {@link DubboLoadingStrategy}
+     * {@link ServicesLoadingStrategy}
+     * 获取的name和对应的具体实现类的对应关系
+     */
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
     /**
@@ -136,8 +154,14 @@ public class ExtensionLoader<T> {
     private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
     /**
      * {@link ExtensionLoader#cacheAdaptiveClass(java.lang.Class, boolean)}中设置值
+     * {@link ExtensionLoader#type}的实现类中(仅限符合条件加载进来的),如果有的话，那只有一个有注解{@link Adaptive}。
+     * 该值即缓存的该实现类
      */
     private volatile Class<?> cachedAdaptiveClass = null;
+
+    /**
+     * 缓存了{@link ExtensionLoader#type}上的{@link SPI}的{@link SPI#value()}
+     */
     private String cachedDefaultName;
     private volatile Throwable createAdaptiveInstanceError;
 
@@ -150,11 +174,18 @@ public class ExtensionLoader<T> {
 
     /**
      * 通过{@link SPI}加载出的{@link LoadingStrategy}数组
+     * {@link org.apache.dubbo.common.extension.DubboInternalLoadingStrategy}
+     * META-INF/dubbo/internal/
+     * {@link org.apache.dubbo.common.extension.DubboLoadingStrategy}
+     * META-INF/dubbo/
+     * {@link org.apache.dubbo.common.extension.ServicesLoadingStrategy}
+     * META-INF/services/
      */
     private static volatile LoadingStrategy[] strategies = loadLoadingStrategies();
 
     /**
      * special_spi.properties配置的数据
+     * 从项目来看,这个配置文件不存在,也即这个map是空的
      */
     private static final Map<String, String> specialSPILoadingStrategyMap = getSpecialSPILoadingStrategyMap();
 
@@ -168,16 +199,24 @@ public class ExtensionLoader<T> {
      */
     private final Set<String> unacceptableExceptions = new ConcurrentHashSet<>();
 
+    /**
+     * 创建本实例的{@link ExtensionDirector}
+     * {@link ExtensionLoader#ExtensionLoader(Class, ExtensionDirector, ScopeModel)}构造器中赋值
+     */
     private final ExtensionDirector extensionDirector;
 
     /**
-     * 构造器中赋值
+     * {@link ExtensionLoader#ExtensionLoader(Class, ExtensionDirector, ScopeModel)}构造器中赋值
      * {@link ScopeModelAwareExtensionProcessor}
+     * 通过{@link ExtensionLoader#extensionDirector}的{@link ExtensionDirector#getExtensionPostProcessors()}获取的
      */
     private final List<ExtensionPostProcessor> extensionPostProcessors;
 
     /**
      * {@link ExtensionLoader#initInstantiationStrategy()}中赋值
+     * 它是取了{@link ExtensionLoader#extensionPostProcessors}中实现了接口{@link ScopeModelAccessor}
+     * 然后再通过{@link InstantiationStrategy#InstantiationStrategy(ScopeModelAccessor)}封装的，
+     * 取的是第一个
      */
     private InstantiationStrategy instantiationStrategy;
     private final ActivateComparator activateComparator;
@@ -199,11 +238,20 @@ public class ExtensionLoader<T> {
      * 关于{@link SPI}
      * https://zhuanlan.zhihu.com/p/212850943
      * </p>
+     * <p>
+     * 目录src/main/resources/META-INF/services/org.apache.dubbo.common.extension.LoadingStrategy
+     * {@link org.apache.dubbo.common.extension.DubboInternalLoadingStrategy}
+     * {@link org.apache.dubbo.common.extension.DubboLoadingStrategy}
+     * {@link org.apache.dubbo.common.extension.ServicesLoadingStrategy}
      *
      * @return non-null
      * @since 2.7.7
      */
     private static LoadingStrategy[] loadLoadingStrategies() {
+        /**
+         * 呃，调用了{@link ServiceLoader#load(Class)}方法,
+         * 这是一个静态方法
+         */
         return stream(load(LoadingStrategy.class).spliterator(), false).sorted().toArray(LoadingStrategy[]::new);
     }
 
@@ -246,13 +294,13 @@ public class ExtensionLoader<T> {
     /**
      * <p>
      * 在{@link ExtensionDirector#createExtensionLoader0(java.lang.Class)}中传递的参数:
-     * type为接口的class
+     * type为有注解{@link SPI}的接口的class
      * scopeModel传递的是{@link FrameworkModel}
      * </p>
      *
-     * @param type
-     * @param extensionDirector
-     * @param scopeModel
+     * @param type              标有注解{@link SPI}的接口的class
+     * @param extensionDirector 创建本实例的{@link ExtensionDirector}
+     * @param scopeModel        本实例的作用域
      */
     ExtensionLoader(Class<?> type, ExtensionDirector extensionDirector, ScopeModel scopeModel) {
         this.type = type;
@@ -1211,7 +1259,9 @@ public class ExtensionLoader<T> {
      * @param type             接口的name
      * @throws InterruptedException
      */
-    private void loadDirectory(Map<String, Class<?>> extensionClasses, LoadingStrategy strategy, String type)
+    private void loadDirectory(Map<String, Class<?>> extensionClasses,
+                               LoadingStrategy strategy,
+                               String type)
         throws InterruptedException {
         loadDirectoryInternal(extensionClasses, strategy, type);
         if (Dubbo2CompactUtils.isEnabled()) {
@@ -1269,15 +1319,29 @@ public class ExtensionLoader<T> {
      * @param type
      * @throws InterruptedException
      */
-    private void loadDirectoryInternal(Map<String, Class<?>> extensionClasses, LoadingStrategy loadingStrategy, String type)
-        throws InterruptedException {
-        // 查找策略的fileName
+    private void loadDirectoryInternal(Map<String, Class<?>> extensionClasses,
+                                       LoadingStrategy loadingStrategy,
+                                       String type) throws InterruptedException {
+        /**
+         * 查找策略的fileName
+         * {@link org.apache.dubbo.common.extension.DubboInternalLoadingStrategy}
+         * META-INF/dubbo/internal/
+         * {@link org.apache.dubbo.common.extension.DubboLoadingStrategy}
+         * META-INF/dubbo/
+         * {@link org.apache.dubbo.common.extension.ServicesLoadingStrategy}
+         * META-INF/services/
+         */
         String fileName = loadingStrategy.directory() + type;
         try {
             List<ClassLoader> classLoadersToLoad = new LinkedList<>();
 
             // try to load from ExtensionLoader's ClassLoader first
             if (loadingStrategy.preferExtensionClassLoader()) {
+                /**
+                 * 这个分支不走
+                 * 三种策略,好像都是false
+                 * 为扩展用的?
+                 */
                 ClassLoader extensionLoaderClassLoader = ExtensionLoader.class.getClassLoader();
                 if (ClassLoader.getSystemClassLoader() != extensionLoaderClassLoader) {
                     classLoadersToLoad.add(extensionLoaderClassLoader);
@@ -1285,6 +1349,10 @@ public class ExtensionLoader<T> {
             }
 
             if (specialSPILoadingStrategyMap.containsKey(type)) {
+                /**
+                 * 这个分支也不会走
+                 * map为空
+                 */
                 String internalDirectoryType = specialSPILoadingStrategyMap.get(type);
                 // skip to load spi when name don't match
                 if (!LoadingStrategy.ALL.equals(internalDirectoryType)
@@ -1629,17 +1697,24 @@ public class ExtensionLoader<T> {
 
         if (clazz.isAnnotationPresent(Adaptive.class)) {
             /**
-             * 很重要
+             * 很重要。
+             * 这几个条件是if else的关系
              */
             cacheAdaptiveClass(clazz, overridden);
         } else if (isWrapperClass(clazz)) {
             /**
              * 很重要
-             * 进入这个条件的逻辑就是，有一个只有一个参数的构造器，且该构造器是{@link ExtensionLoader#type}
+             * 进入这个条件的逻辑就是，所有的构造函数中,有一个只有一个参数的构造器，且该构造器参数类型是{@link ExtensionLoader#type}
              */
             cacheWrapperClass(clazz);
         } else {
             if (StringUtils.isEmpty(name)) {
+                /**
+                 * 如果name为空,
+                 * 1,如果参数clazz上有注解{@link Extension},返回{@link Extension#value()}
+                 * 2,如果clazz的简单类名(不包括包名),以{@link ExtensionLoader#type}的简单类名结尾，返回之前的部分(全部小写)
+                 * 3,返回clazz的简单类名(全小写)
+                 */
                 name = findAnnotationName(clazz);
                 if (name.length() == 0) {
                     throw new IllegalStateException("No such extension name for the class " + clazz.getName()
@@ -1767,6 +1842,9 @@ public class ExtensionLoader<T> {
             cachedActivates.put(name, activate);
         } else if (Dubbo2CompactUtils.isEnabled() && Dubbo2ActivateUtils.isActivateLoaded()) {
             // support com.alibaba.dubbo.common.extension.Activate
+            /**
+             * 下面是判断是否存在{@link com.alibaba.dubbo.common.extension.Activate}注解
+             */
             Annotation oldActivate = clazz.getAnnotation(Dubbo2ActivateUtils.getActivateClass());
             if (oldActivate != null) {
                 cachedActivates.put(name, oldActivate);

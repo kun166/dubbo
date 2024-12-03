@@ -38,6 +38,13 @@ import java.util.concurrent.locks.Lock;
 
 import static org.apache.dubbo.common.constants.LoggerCodeConstants.CONFIG_UNABLE_DESTROY_MODEL;
 
+/**
+ * https://blog.csdn.net/wufagang/article/details/130786109
+ * 有三个实现类,范围从大到小分别为:
+ * {@link FrameworkModel},
+ * {@link ApplicationModel}
+ * {@link ModuleModel}
+ */
 public abstract class ScopeModel implements ExtensionAccessor {
     protected static final ErrorTypeAwareLogger LOGGER = LoggerFactory.getErrorTypeAwareLogger(ScopeModel.class);
 
@@ -63,14 +70,19 @@ public abstract class ScopeModel implements ExtensionAccessor {
 
     private String desc;
 
+    /**
+     * {@link ScopeModel#initialize()}中，应该添加了{@link ScopeModel}的{@link ClassLoader}
+     */
     private final Set<ClassLoader> classLoaders = new ConcurrentHashSet<>();
 
     /**
-     * {@link FrameworkModel#FrameworkModel()}中赋值为null
+     * 父{@link ScopeModel}
      */
     private final ScopeModel parent;
+
     /**
-     * {@link FrameworkModel#FrameworkModel()}中赋值为{@link ExtensionScope#FRAMEWORK}
+     * {@link ScopeModel#ScopeModel(ScopeModel, ExtensionScope, boolean)}构造器中赋值。
+     * 根据不同的实现类，赋值不同，这是一个枚举项
      */
     private final ExtensionScope scope;
 
@@ -79,18 +91,31 @@ public abstract class ScopeModel implements ExtensionAccessor {
      */
     private volatile ExtensionDirector extensionDirector;
 
+    /**
+     * {@link ScopeModel#initialize()}中初始化
+     */
     private volatile ScopeBeanFactory beanFactory;
+
     private final List<ScopeModelDestroyListener> destroyListeners = new CopyOnWriteArrayList<>();
 
     private final List<ScopeClassLoaderListener> classLoaderListeners = new CopyOnWriteArrayList<>();
 
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
+
+    /**
+     * 线性安全的boolean值,记录是否已经销毁。默认是false
+     * <p>
+     * {@link ScopeModel#destroy()}中被设置为true
+     */
     private final AtomicBoolean destroyed = new AtomicBoolean(false);
     /**
      * {@link FrameworkModel#FrameworkModel()}中赋值为false
      */
     private final boolean internalScope;
 
+    /**
+     * 实例锁，初始化的时候会用它锁住
+     */
     protected final Object instLock = new Object();
 
     /**
@@ -114,7 +139,7 @@ public abstract class ScopeModel implements ExtensionAccessor {
      * </p>
      *
      * @param parent
-     * @param scope
+     * @param scope      这是一个枚举啊,{@link ExtensionScope}
      * @param isInternal
      */
     protected ScopeModel(ScopeModel parent, ExtensionScope scope, boolean isInternal) {

@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 
 /**
  * Model of dubbo framework, it can be shared with multiple applications.
+ * 这个是三个{@link ScopeModel}实现类里面，范围最大的。
  */
 public class FrameworkModel extends ScopeModel {
 
@@ -47,16 +48,32 @@ public class FrameworkModel extends ScopeModel {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(FrameworkModel.class);
 
+    /**
+     * 常量
+     */
     public static final String NAME = "FrameworkModel";
+
+    /**
+     * 线性安全的自增序号,初始值为1
+     */
     private static final AtomicLong index = new AtomicLong(1);
 
+    /**
+     * 这个应该是线程锁?
+     */
     private static final Object globalLock = new Object();
 
+    /**
+     * 单例模式,在{@link FrameworkModel#defaultModel()}中初始化
+     */
     private static volatile FrameworkModel defaultInstance;
 
     /**
      * {@link FrameworkModel#FrameworkModel()}中调用
      * 一旦创建过{@link FrameworkModel},即加入到这里面
+     * <p>
+     * 在{@link FrameworkModel#FrameworkModel()}构造其中,会向其中添加数据
+     * 在{@link FrameworkModel#onDestroy()}中会有删除对象操作
      */
     private static final List<FrameworkModel> allInstances = new CopyOnWriteArrayList<>();
 
@@ -89,6 +106,9 @@ public class FrameworkModel extends ScopeModel {
      * <p>
      * {@link FrameworkModel#defaultModel()}中创建
      * </p>
+     * <p>
+     * 说它是单例模式吧，其实它好像也不是……
+     * 说它不是单例模式吧，好像也按着单例模式写的……
      */
     public FrameworkModel() {
         // 初始化父类默认参数
@@ -224,7 +244,9 @@ public class FrameworkModel extends ScopeModel {
             synchronized (globalLock) {
                 resetDefaultFrameworkModel();
                 if (defaultInstance == null) {
-                    // 如果为null，则创建一个新的
+                    /**
+                     * 如果单例模式中对象未创建,则创建一个
+                     */
                     defaultInstance = new FrameworkModel();
                 }
                 instance = defaultInstance;
@@ -380,23 +402,35 @@ public class FrameworkModel extends ScopeModel {
      * <p>
      * {@link FrameworkModel#defaultModel()}中调用
      * </p>
+     * <p>
+     * 几乎没做什么操作
      */
     private static void resetDefaultFrameworkModel() {
         synchronized (globalLock) {
             // 如果不为空且未销毁，则直接返回了
             if (defaultInstance != null && !defaultInstance.isDestroyed()) {
+                /**
+                 * 从判断条件来看,如果未有销毁,则下面逻辑不需要处理。
+                 * 也即:只有销毁的,才会触发下面的逻辑
+                 */
                 return;
             }
             // 先记录原来的defaultInstance
             FrameworkModel oldDefaultFrameworkModel = defaultInstance;
             // 给defaultInstance赋值
             if (allInstances.size() > 0) {
+                /**
+                 * 取最开始的那个
+                 */
                 defaultInstance = allInstances.get(0);
             } else {
                 defaultInstance = null;
             }
             if (oldDefaultFrameworkModel != defaultInstance) {
-                // 如果两者不相同，则打一个日志
+                /**
+                 * 如果两者不相同，则打一个日志
+                 * 好像也没有处理逻辑
+                 */
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Reset global default framework from " + safeGetModelDesc(oldDefaultFrameworkModel)
                         + " to " + safeGetModelDesc(defaultInstance));

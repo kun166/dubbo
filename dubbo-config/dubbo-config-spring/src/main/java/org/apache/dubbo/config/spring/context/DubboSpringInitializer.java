@@ -40,6 +40,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Dubbo spring initialization entry point
+ * <p>
+ * dubbo spring 初始化相关的切入点
  */
 public class DubboSpringInitializer {
 

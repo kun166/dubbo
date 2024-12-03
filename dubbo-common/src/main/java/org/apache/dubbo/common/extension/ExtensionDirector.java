@@ -17,6 +17,7 @@
 package org.apache.dubbo.common.extension;
 
 import org.apache.dubbo.rpc.model.FrameworkModel;
+import org.apache.dubbo.rpc.model.ModuleModel;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelAwareExtensionProcessor;
 
@@ -36,8 +37,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ExtensionDirector implements ExtensionAccessor {
 
     private final ConcurrentMap<Class<?>, ExtensionLoader<?>> extensionLoadersMap = new ConcurrentHashMap<>(64);
+
     /**
-     * 存放key上的{@link SPI}
+     * 这是一个缓存,key是一个标有{@link SPI}注解的接口class
+     * value是这个{@link SPI}的{@link SPI#scope()}
      */
     private final ConcurrentMap<Class<?>, ExtensionScope> extensionScopeMap = new ConcurrentHashMap<>(64);
     private final ExtensionDirector parent;
@@ -190,6 +193,13 @@ public class ExtensionDirector implements ExtensionAccessor {
      * type的{@link SPI}注解,{@link SPI#scope()}为{@link ExtensionScope#SELF}的,通过此方法创建
      * type的{@link SPI}注解,{@link SPI#scope()}，和本实例的{@link ExtensionDirector#scopeModel}相同，也通过此方法创建
      * <p>
+     * 关于第二点，每一个{@link ExtensionDirector}都有且唯一属于一个{@link ScopeModel},
+     * 在创建它的对象创建它的时候就指明了{@link ExtensionDirector#scopeModel},这个值即为创建它的对象
+     * {@link FrameworkModel}
+     * {@link org.apache.dubbo.rpc.model.ApplicationModel}
+     * {@link ModuleModel}
+     *
+     * <p>
      * {@link ExtensionDirector#getExtensionLoader(java.lang.Class)}
      * 中调用
      * </p>
@@ -202,6 +212,9 @@ public class ExtensionDirector implements ExtensionAccessor {
     private <T> ExtensionLoader<T> createExtensionLoader0(Class<T> type) {
         checkDestroyed();
         ExtensionLoader<T> loader;
+        /**
+         * 如果没有的话,就创建了
+         */
         extensionLoadersMap.putIfAbsent(type, new ExtensionLoader<T>(type, this, scopeModel));
         loader = (ExtensionLoader<T>) extensionLoadersMap.get(type);
         return loader;
