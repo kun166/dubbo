@@ -28,6 +28,11 @@ public class SpiExtensionInjector implements ExtensionInjector {
      */
     private ExtensionAccessor extensionAccessor;
 
+    /**
+     * {@link ExtensionLoader#postProcessAfterInitialization(Object, String)}中调用
+     *
+     * @param extensionAccessor
+     */
     @Override
     public void setExtensionAccessor(final ExtensionAccessor extensionAccessor) {
         this.extensionAccessor = extensionAccessor;

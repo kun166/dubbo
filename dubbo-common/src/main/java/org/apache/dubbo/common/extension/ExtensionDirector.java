@@ -33,9 +33,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p></p>
  * <p>ExtensionDirector supports multiple levels, and the child can inherit the parent's extension instances. </p>
  * <p>The way to find and create an extension instance is similar to Java classloader.</p>
+ * <p>
+ * 按类名也很轻松判断出来，这就是一个{@link ExtensionLoader}的缓存字典
+ * 通过{@link ExtensionDirector#extensionLoadersMap}将clazz和{@link ExtensionLoader}做了一个缓存
  */
 public class ExtensionDirector implements ExtensionAccessor {
 
+    /**
+     * 保存标有{@link SPI}的接口class,与其对应的{@link ExtensionLoader}的缓存
+     */
     private final ConcurrentMap<Class<?>, ExtensionLoader<?>> extensionLoadersMap = new ConcurrentHashMap<>(64);
 
     /**

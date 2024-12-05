@@ -62,8 +62,23 @@ public class AdaptiveExtensionInjector implements ExtensionInjector, Lifecycle {
      */
     @Override
     public void initialize() throws IllegalStateException {
+        /**
+         * ExtensionInjector的{@link org.apache.dubbo.common.extension.SPI}有下面四个扩展
+         * adaptive={@link org.apache.dubbo.common.extension.inject.AdaptiveExtensionInjector}
+         * spi={@link org.apache.dubbo.common.extension.inject.SpiExtensionInjector}
+         * scopeBean={@link org.apache.dubbo.common.beans.ScopeBeanExtensionInjector}
+         * spring={@link org.apache.dubbo.config.spring.extension.SpringExtensionInjector}
+         */
         ExtensionLoader<ExtensionInjector> loader = extensionAccessor.getExtensionLoader(ExtensionInjector.class);
-        injectors = loader.getSupportedExtensions().stream()
+        injectors = loader
+            /**
+             * 这个是获取扩展的key
+             */
+            .getSupportedExtensions()
+            .stream()
+            /**
+             * 根据name去获取{@link ExtensionInjector}
+             */
             .map(loader::getExtension)
             .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
     }
@@ -81,6 +96,12 @@ public class AdaptiveExtensionInjector implements ExtensionInjector, Lifecycle {
     @Override
     public <T> T getInstance(final Class<T> type, final String name) {
         return injectors.stream()
+            /**
+             * adaptive={@link org.apache.dubbo.common.extension.inject.AdaptiveExtensionInjector}
+             * {@link }
+             * spi={@link org.apache.dubbo.common.extension.inject.SpiExtensionInjector}
+             * scopeBean={@link org.apache.dubbo.common.beans.ScopeBeanExtensionInjector}
+             */
             .map(injector -> injector.getInstance(type, name))
             .filter(Objects::nonNull)
             .findFirst()

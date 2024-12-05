@@ -21,6 +21,7 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.beans.support.InstantiationStrategy;
 import org.apache.dubbo.common.compact.Dubbo2ActivateUtils;
 import org.apache.dubbo.common.compact.Dubbo2CompactUtils;
+import org.apache.dubbo.common.config.Environment;
 import org.apache.dubbo.common.context.Lifecycle;
 import org.apache.dubbo.common.extension.inject.AdaptiveExtensionInjector;
 import org.apache.dubbo.common.extension.inject.SpiExtensionInjector;
@@ -30,6 +31,7 @@ import org.apache.dubbo.common.lang.Prioritized;
 import org.apache.dubbo.common.logger.ErrorTypeAwareLogger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.resource.Disposable;
+import org.apache.dubbo.common.threadpool.manager.DefaultExecutorRepository;
 import org.apache.dubbo.common.utils.ArrayUtils;
 import org.apache.dubbo.common.utils.ClassLoaderResourceLoader;
 import org.apache.dubbo.common.utils.ClassUtils;
@@ -109,6 +111,15 @@ public class ExtensionLoader<T> {
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
     private static final String SPECIAL_SPI_PROPERTIES = "special_spi.properties";
 
+    /**
+     * {@link ExtensionLoader#createExtension(String, boolean)}方法中添加值
+     * 根据方法传入的name,获取对应的class
+     * 1,如果有有参构造器,且所有的构造器参数都是{@link ScopeModel}的子类,则选择它生成对象
+     * 2,否则用无参构造器生成对象
+     * <p>
+     * key为name对应的class
+     * value为上述生成的对象
+     */
     private final ConcurrentMap<Class<?>, Object> extensionInstances = new ConcurrentHashMap<>(64);
 
     /**
@@ -124,7 +135,8 @@ public class ExtensionLoader<T> {
      * 构造函数中赋值{@link AdaptiveExtensionInjector}
      * </p>
      * <p>
-     * 如果{@link }是{@link ExtensionInjector},此值为null。
+     * 如果{@link ExtensionLoader#type}是{@link ExtensionInjector},此值为null。
+     * 其它是{@link AdaptiveExtensionInjector}
      */
     private final ExtensionInjector injector;
 
@@ -151,6 +163,10 @@ public class ExtensionLoader<T> {
     private final Map<String, Set<String>> cachedActivateGroups = Collections.synchronizedMap(new LinkedHashMap<>());
     private final Map<String, String[][]> cachedActivateValues = Collections.synchronizedMap(new LinkedHashMap<>());
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
+
+    /**
+     *
+     */
     private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
     /**
      * {@link ExtensionLoader#cacheAdaptiveClass(java.lang.Class, boolean)}中设置值
@@ -161,12 +177,18 @@ public class ExtensionLoader<T> {
 
     /**
      * 缓存了{@link ExtensionLoader#type}上的{@link SPI}的{@link SPI#value()}
+     * {@link ExtensionLoader#cacheDefaultExtensionName()}中赋值
      */
     private String cachedDefaultName;
     private volatile Throwable createAdaptiveInstanceError;
 
     /**
      * {@link ExtensionLoader#cacheWrapperClass(java.lang.Class)}中有添加
+     * 包装类的判定:
+     * 构造函数中,存在只有一个参数的构造器,且该参数为{@link ExtensionLoader#type}类型
+     * <p>
+     * 这里为啥是一个set呢?
+     * 因为{@link ExtensionLoader#type}有很多实现类啊
      */
     private Set<Class<?>> cachedWrapperClasses;
 
@@ -192,6 +214,11 @@ public class ExtensionLoader<T> {
     private static SoftReference<Map<java.net.URL, List<String>>> urlListMapCache =
         new SoftReference<>(new ConcurrentHashMap<>());
 
+    /**
+     * {@link ScopeModelAware}
+     * {@link ExtensionAccessorAware}
+     * 两个接口的所有方法吧
+     */
     private static final List<String> ignoredInjectMethodsDesc = getIgnoredInjectMethodsDesc();
 
     /**
@@ -614,6 +641,12 @@ public class ExtensionLoader<T> {
         return (T) holder.get();
     }
 
+    /**
+     * {@link ExtensionLoader#getExtension(String, boolean)}中调用
+     *
+     * @param name
+     * @return
+     */
     private Holder<Object> getOrCreateHolder(String name) {
         Holder<Object> holder = cachedInstances.get(name);
         if (holder == null) {
@@ -681,6 +714,9 @@ public class ExtensionLoader<T> {
         }
         String cacheKey = name;
         if (!wrap) {
+            /**
+             * 不包装的话，name就变了
+             */
             cacheKey += "_origin";
         }
         final Holder<Object> holder = getOrCreateHolder(cacheKey);
@@ -709,6 +745,8 @@ public class ExtensionLoader<T> {
 
     /**
      * Return default extension, return <code>null</code> if it's not configured.
+     * <p>
+     * 获取{@link ExtensionLoader#cachedDefaultName}记录的那个扩展
      */
     public T getDefaultExtension() {
         getExtensionClasses();
@@ -912,6 +950,8 @@ public class ExtensionLoader<T> {
      * <p>
      * {@link ExtensionLoader#getExtension(java.lang.String, boolean)}中调用
      * </p>
+     * <p>
+     * 这个方法和{@link ExtensionLoader#createAdaptiveExtension()}有些相似
      *
      * @param name
      * @param wrap
@@ -919,6 +959,9 @@ public class ExtensionLoader<T> {
      */
     @SuppressWarnings("unchecked")
     private T createExtension(String name, boolean wrap) {
+        /**
+         * 获取name对应的class
+         */
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null || unacceptableExceptions.contains(name)) {
             throw findException(name);
@@ -928,6 +971,9 @@ public class ExtensionLoader<T> {
             if (instance == null) {
                 extensionInstances.putIfAbsent(clazz, createExtensionInstance(clazz));
                 instance = (T) extensionInstances.get(clazz);
+                /**
+                 * 目前来看，没有做什么操作
+                 */
                 instance = postProcessBeforeInitialization(instance, name);
                 /**
                  * 这个方法很重要
@@ -951,6 +997,9 @@ public class ExtensionLoader<T> {
                 if (cachedWrapperClasses != null) {
                     wrapperClassesList.addAll(cachedWrapperClasses);
                     wrapperClassesList.sort(WrapperComparator.COMPARATOR);
+                    /**
+                     * 从这里可以看到,{@link Activate#order()}越大的排的越靠前
+                     */
                     Collections.reverse(wrapperClassesList);
                 }
 
@@ -958,12 +1007,13 @@ public class ExtensionLoader<T> {
                     for (Class<?> wrapperClass : wrapperClassesList) {
                         Wrapper wrapper = wrapperClass.getAnnotation(Wrapper.class);
                         boolean match = (wrapper == null)
-                            || ((ArrayUtils.isEmpty(wrapper.matches())
-                            || ArrayUtils.contains(wrapper.matches(), name))
+                            /**
+                             * 没有{@link Wrapper}注解
+                             */
+                            || ((ArrayUtils.isEmpty(wrapper.matches()) || ArrayUtils.contains(wrapper.matches(), name))
                             && !ArrayUtils.contains(wrapper.mismatches(), name));
                         if (match) {
-                            instance = injectExtension(
-                                (T) wrapperClass.getConstructor(type).newInstance(instance));
+                            instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                             instance = postProcessAfterInitialization(instance, name);
                         }
                     }
@@ -1009,6 +1059,9 @@ public class ExtensionLoader<T> {
     private T postProcessBeforeInitialization(T instance, String name) throws Exception {
         if (extensionPostProcessors != null) {
             for (ExtensionPostProcessor processor : extensionPostProcessors) {
+                /**
+                 * 目前来看，好像只有{@link ScopeModelAwareExtensionProcessor}一个实现类
+                 */
                 instance = (T) processor.postProcessBeforeInitialization(instance, name);
             }
         }
@@ -1028,10 +1081,22 @@ public class ExtensionLoader<T> {
     @SuppressWarnings("unchecked")
     private T postProcessAfterInitialization(T instance, String name) throws Exception {
         if (instance instanceof ExtensionAccessorAware) {
+            /**
+             * 实现了{@link ExtensionAccessorAware}接口的
+             * 目前通过项目看实现类:
+             * {@link AdaptiveExtensionInjector#setExtensionAccessor(ExtensionAccessor)}
+             * {@link DefaultExecutorRepository#setExtensionAccessor(ExtensionAccessor)}
+             * {@link org.apache.dubbo.monitor.dubbo.MetricsFilter#setExtensionAccessor(ExtensionAccessor)}
+             * {@link SpiExtensionInjector#setExtensionAccessor(ExtensionAccessor)}
+             */
             ((ExtensionAccessorAware) instance).setExtensionAccessor(extensionDirector);
         }
         if (extensionPostProcessors != null) {
             for (ExtensionPostProcessor processor : extensionPostProcessors) {
+                /**
+                 * 判断instance是否实现了{@link ScopeModelAware}接口
+                 * 分别赋值
+                 */
                 instance = (T) processor.postProcessAfterInitialization(instance, name);
             }
         }
@@ -1045,6 +1110,7 @@ public class ExtensionLoader<T> {
     /**
      * <p>
      * {@link ExtensionLoader#createExtension(java.lang.String, boolean)}中调用
+     * {@link ExtensionLoader#createAdaptiveExtension()}中调用
      * </p>
      *
      * @param instance
@@ -1057,7 +1123,16 @@ public class ExtensionLoader<T> {
 
         try {
             for (Method method : instance.getClass().getMethods()) {
+                /**
+                 * 遍历所有方法
+                 */
                 if (!isSetter(method)) {
+                    /**
+                     * 如果不是set方法,下面逻辑不走
+                     * 1,以"set"开头
+                     * 2,方法参数只有一个
+                     * 3,方法是public的
+                     */
                     continue;
                 }
                 /**
@@ -1065,7 +1140,8 @@ public class ExtensionLoader<T> {
                  */
                 if (method.isAnnotationPresent(DisableInject.class)) {
                     /**
-                     * 方法上没有标注{@link DisableInject}注解
+                     * 方法上标注{@link DisableInject}注解的，不处理
+                     * 参考{@link Environment}
                      */
                     continue;
                 }
@@ -1075,18 +1151,25 @@ public class ExtensionLoader<T> {
                 if (method.getDeclaringClass() == ScopeModelAware.class) {
                     /**
                      * 不是从{@link ScopeModelAware}继承来的方法
+                     * 未实现{@link ScopeModelAware}接口
                      */
                     continue;
                 }
                 if (instance instanceof ScopeModelAware || instance instanceof ExtensionAccessorAware) {
                     if (ignoredInjectMethodsDesc.contains(ReflectUtils.getDesc(method))) {
+                        /**
+                         * 实现了{@link ScopeModelAware}和{@link ExtensionAccessorAware}
+                         * 的接口不处理
+                         */
                         continue;
                     }
                 }
 
                 Class<?> pt = method.getParameterTypes()[0];
                 if (ReflectUtils.isPrimitives(pt)) {
-                    // 不能是8种基本类型
+                    /**
+                     * 如果这仅有的第一个参数是8种基本类型，不处理
+                     */
                     continue;
                 }
 
@@ -1157,6 +1240,11 @@ public class ExtensionLoader<T> {
      * 2, name starts with "set"
      * <p>
      * 3, only has one parameter
+     * <p>
+     * {@link ExtensionLoader#injectExtension(Object)}中调用
+     * 1,以"set"开头
+     * 2,方法参数只有一个
+     * 3,方法是public的
      */
     private boolean isSetter(Method method) {
         return method.getName().startsWith("set")
@@ -1956,6 +2044,9 @@ public class ExtensionLoader<T> {
     private T createAdaptiveExtension() {
         try {
             T instance = (T) getAdaptiveExtensionClass().newInstance();
+            /**
+             * 这个代码直接返回的,无影响
+             */
             instance = postProcessBeforeInitialization(instance, null);
             /**
              * 这个方法很重要
@@ -1987,6 +2078,9 @@ public class ExtensionLoader<T> {
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
+        /**
+         * 生成一个public class %s$Adaptive implements %s的类
+         */
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 

@@ -124,6 +124,10 @@ public class AdaptiveClassCodeGenerator {
     public String generate(boolean sort) {
         // no need to generate adaptive class since there's no adaptive method found.
         if (!hasAdaptiveMethod()) {
+            /**
+             * 如果没有任何一个标有{@link Adaptive}注解的方法,则抛异常
+             * 最少有一个就行
+             */
             throw new IllegalStateException("No adaptive method exist on extension " + type.getName()
                 + ", refuse to create the adaptive class!");
         }
@@ -217,6 +221,7 @@ public class AdaptiveClassCodeGenerator {
 
     /**
      * generate method declaration
+     * {@link AdaptiveClassCodeGenerator#generate(boolean)}中调用
      */
     private String generateMethod(Method method) {
         String methodReturnType = method.getReturnType().getCanonicalName();
@@ -253,6 +258,7 @@ public class AdaptiveClassCodeGenerator {
 
     /**
      * generate method URL argument null check
+     * {@link AdaptiveClassCodeGenerator#generateMethodContent(Method)}中调用
      */
     private String generateUrlNullCheck(int index) {
         return String.format(CODE_URL_NULL_CHECK, index, URL.class.getName(), index);
@@ -260,24 +266,39 @@ public class AdaptiveClassCodeGenerator {
 
     /**
      * generate method content
+     * {@link AdaptiveClassCodeGenerator#generateMethod(Method)}中调用
      */
     private String generateMethodContent(Method method) {
         Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class);
         StringBuilder code = new StringBuilder(512);
         if (adaptiveAnnotation == null) {
+            /**
+             * 如果方法上未标注{@link Adaptive}注解,则生成一个不支持的方法，即该方法不需要实现，不能被调用
+             */
             return generateUnsupported(method);
         } else {
             /**
              * 寻找类型为{@link URL}的参数，在参数中的第几个位置
+             * org.apache.dubbo.common.URL
              */
             int urlTypeIndex = getUrlTypeIndex(method);
 
             // found parameter in URL type
+            /**
+             * 生成参数判空代码
+             */
             if (urlTypeIndex != -1) {
                 // Null Point check
+                /**
+                 * 找到了某个位置的参数类型为{@link URL}.
+                 * 参考{@link org.apache.dubbo.rpc.Protocol$Adaptive}
+                 */
                 code.append(generateUrlNullCheck(urlTypeIndex));
             } else {
                 // did not find parameter in URL type
+                /**
+                 * 未找到了某个位置的参数类型为{@link URL}
+                 */
                 code.append(generateUrlAssignmentIndirectly(method));
             }
 
@@ -426,20 +447,43 @@ public class AdaptiveClassCodeGenerator {
      * test if parameter has method which returns type <code>URL</code>
      * <p>
      * if not found, throws IllegalStateException
+     * {@link AdaptiveClassCodeGenerator#generateMethodContent(Method)}中调用
+     * 参考{@link org.apache.dubbo.rpc.Protocol$Adaptive}
      */
     private String generateUrlAssignmentIndirectly(Method method) {
+        /**
+         * 获取方法的所有参数类型
+         */
         Class<?>[] pts = method.getParameterTypes();
-
+        /**
+         * value是本方法参数method方法的参数下标
+         * key是该下标的参数拥有的无参且返回类型为{@link URL}的get方法
+         */
         Map<String, Integer> getterReturnUrl = new HashMap<>();
         // find URL getter method
         for (int i = 0; i < pts.length; ++i) {
+            /**
+             * 遍历方法的所有参数类型
+             */
             for (Method m : pts[i].getMethods()) {
+                /**
+                 * 遍历第一层循环的每一个参数类型的所有方法
+                 */
                 String name = m.getName();
                 if ((name.startsWith("get") || name.length() > 3)
                     && Modifier.isPublic(m.getModifiers())
                     && !Modifier.isStatic(m.getModifiers())
                     && m.getParameterTypes().length == 0
                     && m.getReturnType() == URL.class) {
+                    /**
+                     * 1,方法名称以get开始
+                     * 2,方法是public的
+                     * 3,方法不是static的
+                     * 4,方法无参
+                     * 5,方法返回类型为{@link URL}
+                     *
+                     * 从这可以看出来，如果有重名的方法，则取的是最后的那个参数的
+                     */
                     getterReturnUrl.put(name, i);
                 }
             }
@@ -451,12 +495,22 @@ public class AdaptiveClassCodeGenerator {
                 + ": not found url parameter or url attribute in parameters of method " + method.getName());
         }
 
+        /**
+         * 如果getterReturnUrl中，有方法名为"getUrl"的，选中该方法
+         */
         Integer index = getterReturnUrl.get("getUrl");
         if (index != null) {
+            /**
+             * 参数判空
+             */
             return generateGetUrlNullCheck(index, pts[index], "getUrl");
         } else {
             Map.Entry<String, Integer> entry =
                 getterReturnUrl.entrySet().iterator().next();
+            /**
+             * 否则选中第一个
+             * 参数判空
+             */
             return generateGetUrlNullCheck(entry.getValue(), pts[entry.getValue()], entry.getKey());
         }
     }
@@ -465,6 +519,13 @@ public class AdaptiveClassCodeGenerator {
      * 1, test if argi is null
      * 2, test if argi.getXX() returns null
      * 3, assign url with argi.getXX()
+     * {@link AdaptiveClassCodeGenerator#generateUrlAssignmentIndirectly(Method)}中调用
+     * 参考{@link org.apache.dubbo.rpc.Protocol$Adaptive}
+     *
+     * @param index  原方法中的参数下标位置
+     * @param type   原方法中的该参数下标位置的参数类型
+     * @param method type中,以get开头,无参且返回类型为{@link URL}的方法
+     * @return
      */
     private String generateGetUrlNullCheck(int index, Class<?> type, String method) {
         // Null point check
